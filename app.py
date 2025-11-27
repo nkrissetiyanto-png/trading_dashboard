@@ -17,7 +17,16 @@ st.sidebar.title("⚙️ Settings")
 mode = st.sidebar.selectbox("Market", ["Crypto (MEXC/Binance)", "Saham Indonesia"])
 
 symbol = st.sidebar.text_input("Symbol", "BTCUSDT" if mode.startswith("Crypto") else "BBNI.JK")
-interval = st.sidebar.selectbox("Interval", ["1m", "5m", "15m", "1h", "1d"])
+#interval = st.sidebar.selectbox("Interval", ["1m", "5m", "15m", "1h", "1d"])
+
+# INTERVAL HANDLING
+if mode.startswith("Saham Indonesia"):
+    valid_intervals = ["5m", "15m", "1h", "1d"]
+else:
+    valid_intervals = ["1m", "5m", "15m", "1h", "1d"]
+
+interval = st.sidebar.selectbox("Interval", valid_intervals)
+
 
 auto_refresh = st.sidebar.checkbox("Auto Refresh", True)
 refresh_rate = st.sidebar.slider("Refresh (seconds)", 3, 30, 5)
