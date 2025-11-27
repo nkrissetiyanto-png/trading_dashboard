@@ -1,10 +1,11 @@
 import streamlit as st
 
 def render_smartmoney(df):
-    st.subheader("💰 Smart Money Concept")
+    st.subheader("💰 Smart Money")
 
-    last = df.tail(1).iloc[0]
+    last = df.iloc[-1]
+    prev = df.iloc[-5]
 
-    status = "BULLISH" if last['close'] > df['open'].iloc[-5] else "BEARISH"
+    bias = "BULLISH" if last["close"] > prev["open"] else "BEARISH"
 
-    st.info(f"Smart Money Status: **{status}**")
+    st.info(f"Smart Money Bias: **{bias}**")
