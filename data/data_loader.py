@@ -22,6 +22,9 @@ def load_candles(symbol, interval, mode="Crypto"):
         return df
 
     else:
+        if interval == "1m":
+            interval = "5m"
+        
         df = yf.download(symbol, period="5d", interval=interval)
         df = df.reset_index()
         df.columns = ["date", "open", "high", "low", "close", "adj", "volume"]
