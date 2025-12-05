@@ -91,6 +91,15 @@ def premium_card(title, value, subtext="", icon="💠"):
         </div>
     """
 
+def is_number(x):
+    try:
+        float(x)
+        return True
+    except:
+        return False
+
+def is_pos(x):
+    return is_number(x) and float(x) > 0
 
 # ============= PREMIUM RENDER ==================
 
@@ -103,12 +112,23 @@ def render_crypto_sentiment():
     mom = get_btc_momentum()
     pulse = get_volume_pulse()
 
-    # --- Coloring and icons dynamically ---
+    # --- Safe evaluation helpers ---
+    def is_pos(x):
+        try:
+            return float(x) > 0
+        except:
+            return False
+
+    def is_neg(x):
+        try:
+            return float(x) < 0
+        except:
+            return False
+
+    # Icons
     mood_icon = "🟢" if fear and fear > 55 else "🟡" if fear and fear > 25 else "🔴"
-    
-    # Safe unicode icons
-    mom_icon = "\u2197" if mom and mom > 0 else "\u2198"     # ↗ vs ↘
-    pulse_icon = "\u2197" if pulse and pulse > 0 else "\u2198"
+    mom_icon = "\u2197" if is_pos(mom) else "\u2198"
+    pulse_icon = "\u2197" if is_pos(pulse) else "\u2198"
 
 
     # --- Layout ---
@@ -125,13 +145,23 @@ def render_crypto_sentiment():
 
     with c3:
         val = f"{mom}%" if mom is not None else "N/A"
-        color = "#2ecc71" if mom and mom > 0 else "#e74c3c"
-        st.markdown(premium_card("BTC Momentum (7d)", val, badge("Bullish" if mom > 0 else "Bearish", color), icon=mom_icon), unsafe_allow_html=True)
+        color = "#2ecc71" if is_pos(mom) else "#e74c3c"
+        lbl = "Bullish" if is_pos(mom) else "Bearish"
+
+        st.markdown(
+            premium_card("BTC Momentum (7d)", val, badge(lbl, color), icon=mom_icon),
+            unsafe_allow_html=True
+        )
 
     with c4:
         val = f"{pulse}%" if pulse is not None else "N/A"
-        color = "#2ecc71" if pulse and pulse > 0 else "#e74c3c"
-        st.markdown(premium_card("Volume Pulse", val, badge("High Liquidity" if pulse > 0 else "Low Liquidity", color), icon=pulse_icon), unsafe_allow_html=True)
+        color = "#2ecc71" if is_pos(pulse) else "#e74c3c"
+        lbl = "High Liquidity" if is_pos(pulse) else "Low Liquidity"
+
+        st.markdown(
+            premium_card("Volume Pulse", val, badge(lbl, color), icon=pulse_icon),
+            unsafe_allow_html=True
+        )
 
     # ===== Progress Sentiment Bar =====
     score = fear if fear is not None else 50
