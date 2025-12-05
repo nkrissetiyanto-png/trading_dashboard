@@ -6,6 +6,7 @@ from components.orderbook import render_orderbook
 from components.smartmoney import render_smartmoney
 from components.signals import render_signals
 from data.data_loader import load_candles
+from components.sentiment import render_sentiment
 
 st.set_page_config(
     page_title="🔥 Nanang Trading Dashboard",
@@ -48,6 +49,7 @@ with col1:
     render_chart(df)
     render_indicators(df)
     render_smartmoney(df)
+    render_sentiment()   # ← tambahan baru
     render_signals(df)
 
 with col2:
