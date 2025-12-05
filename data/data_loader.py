@@ -62,18 +62,36 @@ def load_candles(symbol, interval, mode="Crypto"):
 
         return df
 
-
     # ====== SAHAM INDONESIA (YFINANCE) ======
     else:
-        # Yahoo Finance tidak support 1m untuk IDX → paksa minimal 5m
+        # Yahoo Finance tidak support 1m untuk IDX
         if interval == "1m":
             interval = "5m"
-
+    
         df = yf.download(symbol, period="5d", interval=interval)
-
+    
         if df.empty:
             raise ValueError(f"Yahoo Finance tidak mengembalikan data untuk {symbol} ({interval})")
-
+    
         df = df.reset_index()
-        df.columns = ["date", "open", "high", "low", "close", "adj", "volume"]
+    
+        # Beberapa interval TIDAK punya 'Adj Close'
+        # jadi kita adaptasikan rename ke kolom yang tersedia
+        cols = list(df.columns)
+    
+        # Kasus umum:
+        # ['Date','Open','High','Low','Close','Adj Close','Volume']
+        if len(cols) == 7:
+            df.columns = ["date", "open", "high", "low", "close", "adj", "volume"]
+    
+        # Kasus interval intraday (TIDAK ada Adj Close)
+        # ['Date','Open','High','Low','Close','Volume']
+        elif len(cols) == 6:
+            df.columns = ["date", "open", "high", "low", "close", "volume"]
+            df["adj"] = df["close"]  # tambahkan adj agar konsisten
+            df = df[["date","open","high","low","close","adj","volume"]]
+    
+        else:
+            raise ValueError(f"Tidak dikenali struktur kolom dari YFinance: {cols}")
+    
         return df
