@@ -69,8 +69,6 @@ def badge(text, color):
     """
 
 def premium_card(title, value, subtext="", icon="💠"):
-    safe_subtext = subtext.replace("\n", "") if subtext else ""
-
     return f"""
         <div style="
             padding:18px;
@@ -90,7 +88,7 @@ def premium_card(title, value, subtext="", icon="💠"):
             </div>
 
             <div style="font-size:13px;color:#AAB4C2;margin-top:8px;">
-                {safe_subtext}
+                {subtext if subtext else ""}
             </div>
         </div>
     """
