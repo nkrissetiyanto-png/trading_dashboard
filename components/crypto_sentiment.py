@@ -134,14 +134,13 @@ def badge(text, color):
 
 
 def premium_card(title, value, subtext="", icon="💠"):
-    return f"""
-    <div class="premium-card">
-        <div class="premium-title">{icon} {title}</div>
-        <div class="premium-value">{value}</div>
-        <div class="premium-sub">{subtext}</div>
-    </div>
-    """
-
+    return (
+        '<div class="premium-card">'
+            f'<div class="premium-title">{icon} {title}</div>'
+            f'<div class="premium-value">{value}</div>'
+            f'<div class="premium-sub">{subtext}</div>'
+        '</div>'
+    )
 
 # ===================== RENDER PREMIUM SENTIMENT =====================
 
