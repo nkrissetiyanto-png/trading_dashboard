@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 from components.chart import render_chart
 from components.indicators import render_indicators
@@ -56,4 +57,6 @@ with col2:
         st.info("Orderbook tidak tersedia untuk saham Indo.")
 
 if auto_refresh:
-    st.experimental_rerun()
+    time.sleep(refresh_rate)
+    st.rerun()
+
