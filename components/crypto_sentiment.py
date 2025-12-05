@@ -96,7 +96,6 @@ def is_pos(x):
     return is_number(x) and float(x) > 0
 
 # ============= PREMIUM RENDER ==================
-
 def render_crypto_sentiment():
 
     st.markdown("## 🧭 Crypto Market Sentiment (Premium)")
@@ -106,70 +105,62 @@ def render_crypto_sentiment():
     mom = get_btc_momentum()
     pulse = get_volume_pulse()
 
-    # --- Fix: convert momentum & volume pulse to scalar ---
+    # --- pastikan mom & pulse scalar float / None ---
     try:
-        mom = float(mom)
+        mom = float(mom) if mom is not None else None
     except:
         mom = None
-    
+
     try:
-        pulse = float(pulse)
+        pulse = float(pulse) if pulse is not None else None
     except:
         pulse = None
 
-    val_mom = f"{mom:.2f}%" if mom is not None else "N/A"
-    val_pulse = f"{pulse:.2f}%" if pulse is not None else "N/A"
-
-    # --- Safe evaluation helpers ---
-    def is_pos(x):
-        try:
-            return float(x) > 0
-        except:
-            return False
-
-    def is_neg(x):
-        try:
-            return float(x) < 0
-        except:
-            return False
-
-    # Icons
-    mood_icon = "🟢" if fear and fear > 55 else "🟡" if fear and fear > 25 else "🔴"
-    mom_icon = "\u2197" if is_pos(mom) else "\u2198"
-    pulse_icon = "\u2197" if is_pos(pulse) else "\u2198"
-
+    # --- Icon & arah ---
+    mood_icon = "🟢" if fear is not None and fear > 55 else "🟡" if fear is not None and fear > 25 else "🔴"
+    mom_icon = "↗" if (mom is not None and mom > 0) else "↘"
+    pulse_icon = "↗" if (pulse is not None and pulse > 0) else "↘"
 
     # --- Layout ---
     c1, c2, c3, c4 = st.columns(4)
 
+    # Fear & Greed
     with c1:
         val = f"{fear}/100" if fear is not None else "N/A"
-        lbl = badge(fear_label, "#27ae60" if fear > 55 else "#f1c40f" if fear > 25 else "#c0392b") if fear_label else ""
-        st.markdown(premium_card("Fear & Greed Index", val, lbl, icon=mood_icon), unsafe_allow_html=True)
+        if fear is not None and fear_label:
+            if fear > 55:
+                fg_color = "#27ae60"
+            elif fear > 25:
+                fg_color = "#f1c40f"
+            else:
+                fg_color = "#c0392b"
+            sub = badge(fear_label, fg_color)
+        else:
+            sub = ""
+        st.markdown(premium_card("Fear & Greed Index", val, sub, icon=mood_icon),
+                    unsafe_allow_html=True)
 
+    # BTC Dominance
     with c2:
-        val = f"{btc_dom}%" if btc_dom is not None else "N/A"
-        st.markdown(premium_card("BTC Dominance", val, "Market Strength Indicator", icon="🧲"), unsafe_allow_html=True)
+        val = f"{btc_dom:.2f}%" if btc_dom is not None else "N/A"
+        st.markdown(premium_card("BTC Dominance", val, "Market Strength Indicator", icon="🧲"),
+                    unsafe_allow_html=True)
 
+    # Momentum
     with c3:
-        val = val_mom
-        color = "#2ecc71" if is_pos(mom) else "#e74c3c"
-        lbl = "Bullish" if is_pos(mom) else "Bearish"
-    
-        st.markdown(
-            premium_card("BTC Momentum (7d)", val, badge(lbl, color), icon=mom_icon),
-            unsafe_allow_html=True
-        )
+        val = f"{mom:.2f}%" if mom is not None else "N/A"
+        color = "#2ecc71" if (mom is not None and mom > 0) else "#e74c3c"
+        sub = badge("Bullish" if mom is not None and mom > 0 else "Bearish", color)
+        st.markdown(premium_card("BTC Momentum (7d)", val, sub, icon=mom_icon),
+                    unsafe_allow_html=True)
 
+    # Volume Pulse
     with c4:
-        val = val_pulse
-        color = "#2ecc71" if is_pos(pulse) else "#e74c3c"
-        lbl = "High Liquidity" if is_pos(pulse) else "Low Liquidity"
-    
-        st.markdown(
-            premium_card("Volume Pulse", val, badge(lbl, color), icon=pulse_icon),
-            unsafe_allow_html=True
-        )
+        val = f"{pulse:.2f}%" if pulse is not None else "N/A"
+        color = "#2ecc71" if (pulse is not None and pulse > 0) else "#e74c3c"
+        sub = badge("High Liquidity" if pulse is not None and pulse > 0 else "Low Liquidity", color)
+        st.markdown(premium_card("Volume Pulse", val, sub, icon=pulse_icon),
+                    unsafe_allow_html=True)
 
     # ===== Progress Sentiment Bar =====
     score = fear if fear is not None else 50
