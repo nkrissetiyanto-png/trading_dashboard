@@ -10,18 +10,34 @@ LQ45 = [
 ]
 
 def get_sentiment_index():
-    df = yf.download("^JKSE", period="5d", interval="1d")
+    df = yf.download("^JKSE", period="7d", interval="1d")
 
     if df.empty:
         return None
 
     df = df.reset_index()
+
+    # Hitung perubahan harian
     df["change"] = df["Close"].pct_change() * 100
+
+    # Buang nilai NaN
+    df = df.dropna(subset=["change"])
+
+    if df.empty:
+        return None
+
     last = df.iloc[-1]
 
+    # Pastikan numeric
+    try:
+        change_val = float(last["change"])
+        close_val = float(last["Close"])
+    except:
+        return None
+
     return {
-        "change": round(last["change"], 2),
-        "close": round(last["Close"], 2)
+        "change": round(change_val, 2),
+        "close": round(close_val, 2),
     }
 
 def get_sector_strength():
@@ -52,9 +68,9 @@ def render_sentiment():
 
     idx = get_sentiment_index()
     score = get_sector_strength()
-
+    
     if idx is None or score is None:
-        st.warning("Tidak dapat memuat sentimen pasar.")
+        st.warning("Tidak dapat memuat sentimen pasar (data tidak valid).")
         return
 
     # Warna berdasarkan score
