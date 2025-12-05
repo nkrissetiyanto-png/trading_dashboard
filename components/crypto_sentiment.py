@@ -56,17 +56,7 @@ def get_volume_pulse():
 # ============= BADGE COMPONENT ==================
 
 def badge(text, color):
-    return f"""
-    <span style="
-        background-color:{color};
-        padding:4px 10px;
-        border-radius:8px;
-        color:white;
-        font-size:12px;
-        font-weight:600;">
-        {text}
-    </span>
-    """
+    return f'<span style="background-color:{color}; padding:4px 10px; border-radius:8px; color:white; font-size:12px; font-weight:600;">{text}</span>'
 
 def premium_card(title, value, subtext="", icon="💠"):
     return f'''
