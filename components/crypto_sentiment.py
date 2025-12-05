@@ -157,29 +157,20 @@ def render_crypto_sentiment():
     mom = float(mom) if mom is not None else None
     pulse = float(pulse) if pulse is not None else None
 
-    if fear is None:
-        mood_icon = "⚪️"
-    elif fear > 55:
-        mood_icon = "🟢"
-    elif fear > 25:
-        mood_icon = "🟡"
-    else:
-        mood_icon = "🔴"
+    if fear is None: mood_icon = "⚪️"
+    elif fear > 55: mood_icon = "🟢"
+    elif fear > 25: mood_icon = "🟡"
+    else: mood_icon = "🔴"
 
-    mom_icon = "↗" if (mom is not None and mom > 0) else "↘"
-    pulse_icon = "↗" if (pulse is not None and pulse > 0) else "↘"
+    mom_icon = "↗" if mom and mom > 0 else "↘"
+    pulse_icon = "↗" if pulse and pulse > 0 else "↘"
 
     c1, c2, c3, c4 = st.columns(4)
 
     with c1:
         val = f"{fear}/100" if fear is not None else "N/A"
         if fear is not None and fear_label:
-            if fear > 55:
-                col = "#2ecc71"
-            elif fear > 25:
-                col = "#f1c40f"
-            else:
-                col = "#e74c3c"
+            col = "#2ecc71" if fear > 55 else "#f1c40f" if fear > 25 else "#e74c3c"
             sub = badge(fear_label, col)
         else:
             sub = ""
@@ -191,23 +182,20 @@ def render_crypto_sentiment():
 
     with c3:
         val = f"{mom:.2f}%" if mom is not None else "N/A"
-        col = "#2ecc71" if (mom is not None and mom > 0) else "#e74c3c"
-        sub = badge("Bullish" if (mom and mom > 0) else "Bearish", col)
+        col = "#2ecc71" if mom and mom > 0 else "#e74c3c"
+        sub = badge("Bullish" if mom and mom > 0 else "Bearish", col)
         st.markdown(premium_card("BTC Momentum (7d)", val, sub, icon=mom_icon), unsafe_allow_html=True)
 
     with c4:
         val = f"{pulse:.2f}%" if pulse is not None else "N/A"
-        col = "#2ecc71" if (pulse is not None and pulse > 0) else "#e74c3c"
-        sub = badge("High Liquidity" if (pulse and pulse > 0) else "Low Liquidity", col)
+        col = "#2ecc71" if pulse and pulse > 0 else "#e74c3c"
+        sub = badge("High Liquidity" if pulse and pulse > 0 else "Low Liquidity", col)
         st.markdown(premium_card("Volume Pulse", val, sub, icon=pulse_icon), unsafe_allow_html=True)
 
     score = fear if fear is not None else 50
 
-    st.markdown(
-        f"""
+    st.markdown(f"""
         <div class="sentibar-container">
             <div class="sentibar-fill" style="width:{score}%"></div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    """, unsafe_allow_html=True)
