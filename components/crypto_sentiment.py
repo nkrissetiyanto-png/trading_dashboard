@@ -112,6 +112,20 @@ def render_crypto_sentiment():
     mom = get_btc_momentum()
     pulse = get_volume_pulse()
 
+    # --- Fix: convert momentum & volume pulse to scalar ---
+    try:
+        mom = float(mom)
+    except:
+        mom = None
+    
+    try:
+        pulse = float(pulse)
+    except:
+        pulse = None
+
+    val_mom = f"{mom:.2f}%" if mom is not None else "N/A"
+    val_pulse = f"{pulse:.2f}%" if pulse is not None else "N/A"
+
     # --- Safe evaluation helpers ---
     def is_pos(x):
         try:
@@ -144,20 +158,20 @@ def render_crypto_sentiment():
         st.markdown(premium_card("BTC Dominance", val, "Market Strength Indicator", icon="🧲"), unsafe_allow_html=True)
 
     with c3:
-        val = f"{mom}%" if mom is not None else "N/A"
+        val = val_mom
         color = "#2ecc71" if is_pos(mom) else "#e74c3c"
         lbl = "Bullish" if is_pos(mom) else "Bearish"
-
+    
         st.markdown(
             premium_card("BTC Momentum (7d)", val, badge(lbl, color), icon=mom_icon),
             unsafe_allow_html=True
         )
 
     with c4:
-        val = f"{pulse}%" if pulse is not None else "N/A"
+        val = val_pulse
         color = "#2ecc71" if is_pos(pulse) else "#e74c3c"
         lbl = "High Liquidity" if is_pos(pulse) else "Low Liquidity"
-
+    
         st.markdown(
             premium_card("Volume Pulse", val, badge(lbl, color), icon=pulse_icon),
             unsafe_allow_html=True
