@@ -4,6 +4,80 @@ import yfinance as yf
 import pandas as pd
 
 # ============= API FUNCTIONS ==================
+st.markdown("""
+<style>
+
+.premium-card {
+    padding:22px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.18);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    text-align:center;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.premium-card:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 10px 32px rgba(0,0,0,0.50);
+}
+
+.premium-title {
+    font-size:16px;
+    color:#E5ECF5;
+    font-weight:600;
+    margin-bottom:6px;
+}
+
+.premium-value {
+    font-size:38px;
+    font-weight:800;
+    color:white;
+    margin-top:-4px;
+}
+
+.premium-sub {
+    font-size:14px;
+    color:#AAB4C2;
+    margin-top:8px;
+}
+
+/* Glow Badge */
+.glow-badge {
+    padding:4px 12px;
+    border-radius:10px;
+    color:white;
+    font-size:12px;
+    font-weight:600;
+    box-shadow: 0 0 8px rgba(255,255,255,0.4);
+}
+
+/* Animated Sentiment Bar */
+.sentibar-container {
+    width:100%;
+    height:22px;
+    border-radius:12px;
+    background:#1a1a1a;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.15);
+    margin-top:15px;
+}
+
+.sentibar-fill {
+    height:100%;
+    background:linear-gradient(90deg,#16e06f,#f1c40f,#e74c3c);
+    background-size:300% 100%;
+    animation:flow 4s linear infinite;
+}
+
+@keyframes flow {
+    0% {background-position:0%;}
+    100% {background-position:200%;}
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 def get_fear_greed():
     try:
