@@ -210,10 +210,23 @@ def render_sentiment(symbol):
 
     # ====== IHSG Info (Ditampilkan duluan seperti versi awal) ======
     col_ihsg1, col_ihsg2 = st.columns(2)
+    
+    change = ihsg["change"]
+    is_up = change >= 0
+    
+    badge = (
+        f"<span style='color:#00ff88; font-weight:600;'>🟢 +{change}%</span>"
+        if is_up else
+        f"<span style='color:#ff5555; font-weight:600;'>🔴 {change}%</span>"
+    )
+    
     with col_ihsg1:
         st.metric("IHSG", ihsg["close"])
+        st.markdown(badge, unsafe_allow_html=True)
+    
     with col_ihsg2:
-        st.metric("Perubahan Harian", f"{ihsg['change']}%")
+        st.metric("Perubahan Harian", f"{change}%")
+
     
     if ihsg is None or market_score is None:
         st.warning("Tidak dapat memuat sentimen pasar.")
