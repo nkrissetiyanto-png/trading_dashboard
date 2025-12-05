@@ -49,7 +49,11 @@ with col1:
     render_chart(df)
     render_indicators(df)
     render_smartmoney(df)
-    render_sentiment(symbol)
+
+    # === Tampilkan Sentimen hanya untuk Saham Indonesia ===
+    if mode.startswith("Saham Indonesia"):
+        render_sentiment(symbol)
+    
     render_signals(df)
 
 with col2:
