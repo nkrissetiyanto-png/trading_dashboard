@@ -51,13 +51,14 @@ with col1:
     render_indicators(df)
     render_smartmoney(df)
 
-    # === Tampilkan Sentimen hanya untuk Saham Indonesia ===
     if mode.startswith("Saham Indonesia"):
         render_sentiment(symbol)
-    else:
-        render_crypto_sentiment()
-    
+
     render_signals(df)
+
+# === SENTIMEN CRYPTO DIPINDAH KE LUAR COLUMN ===
+if mode.startswith("Crypto"):
+    render_crypto_sentiment()
 
 with col2:
     if mode.startswith("Crypto"):
