@@ -32,7 +32,12 @@ auto_refresh = st.sidebar.checkbox("Auto Refresh", True)
 refresh_rate = st.sidebar.slider("Refresh (seconds)", 3, 30, 5)
 
 # Load data
-df = load_candles(symbol, interval, mode)
+# setelah bikin sidebar & dapat symbol, interval, mode, dll
+try:
+    df = load_candles(symbol, interval, mode)
+except Exception as e:
+    st.error(f"❌ Gagal memuat data: {e}")
+    st.stop()
 
 st.title(f"🔥 Nanang Premium Dashboard — {symbol}")
 
