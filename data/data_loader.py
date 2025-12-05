@@ -5,56 +5,46 @@ import requests
 
 def load_candles(symbol, interval, mode="Crypto"):
     # ====== CRYPTO (BINANCE) ======
+    # ====== CRYPTO (MEXC) ======
     if mode.startswith("Crypto"):
         url = (
-            "https://api.binance.com/api/v3/klines"
+            "https://api.mexc.com/api/v3/klines"
             f"?symbol={symbol}&interval={interval}&limit=200"
         )
-
+    
         resp = requests.get(url, timeout=10)
-
-        # 1) Cek HTTP
+    
         if resp.status_code != 200:
-            raise ValueError(f"Binance HTTP {resp.status_code}: {resp.text[:200]}")
-
-        # 2) Cek JSON
+            raise ValueError(f"MEXC HTTP {resp.status_code}: {resp.text[:200]}")
+    
         try:
             data = resp.json()
         except ValueError:
-            # Bukan JSON (mungkin HTML blokir / proxy)
-            raise ValueError(f"Binance non-JSON response: {resp.text[:200]}")
-
-        # 3) Kline seharusnya LIST of LIST
+            raise ValueError(f"MEXC non-JSON response: {resp.text[:200]}")
+    
         if not isinstance(data, list):
-            # biasanya error: {"code":...,"msg":...}
-            raise ValueError(f"Binance API error: {data}")
-
+            raise ValueError(f"MEXC API error: {data}")
+    
         if not data:
-            raise ValueError("Binance returned empty data")
-
-        if not isinstance(data[0], list):
-            raise ValueError(f"Unexpected kline format: {data[:3]}")
-
-        # 4) Susunan kolom resmi kline
+            raise ValueError("MEXC returned empty data")
+    
+        # Susunan kline MEXC → IDENTIK dengan Binance
         cols = [
             "open_time", "open", "high", "low", "close", "volume",
             "close_time", "quote_asset_volume", "num_trades",
             "taker_base_vol", "taker_quote_vol", "ignore"
         ]
-
-        # Kalau panjang data[0] beda, kita potong dulu ke 12 kolom
+    
         data = [row[:12] for row in data]
-
+    
         df = pd.DataFrame(data, columns=cols)
-
-        # Ambil kolom yang dipakai
         df = df[["open_time", "open", "high", "low", "close", "volume"]]
         df["open_time"] = pd.to_datetime(df["open_time"], unit="ms")
         df.rename(columns={"open_time": "date"}, inplace=True)
-
+    
         for col in ["open", "high", "low", "close", "volume"]:
             df[col] = df[col].astype(float)
-
+    
         return df
 
     # ====== SAHAM INDONESIA (YFINANCE) ======
