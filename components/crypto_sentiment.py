@@ -134,11 +134,13 @@ def render_crypto_sentiment():
                 fg_color = "#f1c40f"
             else:
                 fg_color = "#c0392b"
-            sub = badge(fear_label, fg_color)
+            sub = badge(fear_label, fg_color)      # ⬅️ TIDAK ada + "</div>"
         else:
             sub = ""
-        st.markdown(premium_card("Fear & Greed Index", val, sub, icon=mood_icon),
-                    unsafe_allow_html=True)
+        st.markdown(
+            premium_card("Fear & Greed Index", val, sub, icon=mood_icon),
+            unsafe_allow_html=True
+        )
 
     # BTC Dominance
     with c2:
@@ -150,17 +152,21 @@ def render_crypto_sentiment():
     with c3:
         val = f"{mom:.2f}%" if mom is not None else "N/A"
         color = "#2ecc71" if (mom is not None and mom > 0) else "#e74c3c"
-        sub = badge("Bullish" if mom is not None and mom > 0 else "Bearish", color)
-        st.markdown(premium_card("BTC Momentum (7d)", val, sub, icon=mom_icon),
-                    unsafe_allow_html=True)
+        sub = badge("Bullish" if mom is not None and mom > 0 else "Bearish", color)  # ⬅️ tanpa tambahan apa pun
+        st.markdown(
+            premium_card("BTC Momentum (7d)", val, sub, icon=mom_icon),
+            unsafe_allow_html=True
+        )
 
     # Volume Pulse
     with c4:
         val = f"{pulse:.2f}%" if pulse is not None else "N/A"
         color = "#2ecc71" if (pulse is not None and pulse > 0) else "#e74c3c"
         sub = badge("High Liquidity" if pulse is not None and pulse > 0 else "Low Liquidity", color)
-        st.markdown(premium_card("Volume Pulse", val, sub, icon=pulse_icon),
-                    unsafe_allow_html=True)
+        st.markdown(
+            premium_card("Volume Pulse", val, sub, icon=pulse_icon),
+            unsafe_allow_html=True
+        )
 
     # ===== Progress Sentiment Bar =====
     score = fear if fear is not None else 50
