@@ -176,7 +176,7 @@ def render_sentiment():
     # Stock
     stock_score = get_stock_sentiment(symbol)
     
-    if idx is None or score is None:
+    if idx is None or market_score is None:
         st.warning("Tidak dapat memuat sentimen pasar.")
         return
 
