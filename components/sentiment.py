@@ -35,41 +35,48 @@ SECTOR_COMPONENTS = {
     "Energy": ["ADRO.JK","BYAN.JK"]
 }
 
-def get_sector_sentiment(symbol):
-    sector = SECTOR_MAP.get(symbol, None)
-    if sector is None:
-        return None, None
+def get_stock_sentiment(symbol):
+    df = yf.download(symbol, period="30d", interval="1d")
+    if df.empty:
+        return None
 
-    tickers = SECTOR_COMPONENTS.get(sector, [])
-    if len(tickers) == 0:
-        return None, None
+    df = df.reset_index()
 
-    changes = []
+    # Kalau datanya kurang dari 7 hari → tidak bisa hitung momentum
+    if len(df) < 7:
+        return None
 
-    for t in tickers:
-        df = yf.download(t, period="5d", interval="1d")
-        if df.empty:
-            continue
-        df = df.reset_index()
-        if len(df) < 2:
-            continue
+    close = df["Close"]
 
-        prev = float(df["Close"].iloc[-2])
-        last = float(df["Close"].iloc[-1])
-        pct = (last - prev) / prev * 100
-        changes.append(pct)
+    # Trend score (EMA 5 vs EMA 20)
+    df["EMA5"] = close.ewm(span=5).mean()
+    df["EMA20"] = close.ewm(span=20).mean()
+    trend_score = 20 if df["EMA5"].iloc[-1] > df["EMA20"].iloc[-1] else 5
 
-    if len(changes) == 0:
-        return sector, None
+    # Momentum 5 hari (aman dari NaN & Series)
+    try:
+        mom = float((close.iloc[-1] - close.iloc[-6]) / close.iloc[-6] * 100)
+    except:
+        mom = 0.0
+    mom_score = min(max(mom + 10, 0), 20)
 
-    avg_change = sum(changes) / len(changes)
+    # Volatility score
+    vol = close.pct_change().std() * 100
+    vol_score = 20 - min(vol, 20)
 
-    # Convert to 0–100
-    score = (avg_change + 5) * 10
-    score = max(0, min(score, 100))
-    score = round(score)
+    # Volume pressure
+    try:
+        vp = (df["Volume"].iloc[-1] - df["Volume"].mean()) / df["Volume"].mean() * 100
+        vp = float(vp)
+    except:
+        vp = 0
+    vp_score = min(max(vp + 10, 0), 20)
 
-    return sector, score
+    # Total score
+    total = trend_score + mom_score + vol_score + vp_score
+    total = max(0, min(total, 100))
+
+    return round(total)
     
 def get_stock_sentiment(symbol):
     df = yf.download(symbol, period="20d", interval="1d")
