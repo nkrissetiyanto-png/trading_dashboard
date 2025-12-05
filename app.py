@@ -50,15 +50,12 @@ with col1:
     render_chart(df)
     render_indicators(df)
     render_smartmoney(df)
+    render_signals(df)
 
     if mode.startswith("Saham Indonesia"):
         render_sentiment(symbol)
-
-    render_signals(df)
-
-# === SENTIMEN CRYPTO DIPINDAH KE LUAR COLUMN ===
-if mode.startswith("Crypto"):
-    render_crypto_sentiment()
+    else:
+        render_crypto_sentiment()
 
 with col2:
     if mode.startswith("Crypto"):
