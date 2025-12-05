@@ -49,7 +49,7 @@ with col1:
     render_chart(df)
     render_indicators(df)
     render_smartmoney(df)
-    render_sentiment()   # ← tambahan baru
+    render_sentiment(symbol)
     render_signals(df)
 
 with col2:
