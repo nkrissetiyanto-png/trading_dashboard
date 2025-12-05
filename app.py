@@ -7,6 +7,7 @@ from components.smartmoney import render_smartmoney
 from components.signals import render_signals
 from data.data_loader import load_candles
 from components.sentiment import render_sentiment
+from components.crypto_sentiment import render_crypto_sentiment
 
 st.set_page_config(
     page_title="🔥 Nanang Trading Dashboard",
@@ -53,6 +54,8 @@ with col1:
     # === Tampilkan Sentimen hanya untuk Saham Indonesia ===
     if mode.startswith("Saham Indonesia"):
         render_sentiment(symbol)
+    else:
+        render_crypto_sentiment()
     
     render_signals(df)
 
