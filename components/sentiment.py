@@ -26,42 +26,48 @@ def get_sentiment_index():
         "close": round(float(df["Close"].iloc[-1]), 2)
     }
 
-
 def get_sector_strength():
     changes = []
 
     for symbol in LQ45:
-        df = yf.download(symbol, period="3d", interval="1d")
-
-        if df.empty:
-            continue
-
-        df = df.reset_index()
-
-        if len(df) < 2:  # tidak ada data cukup
-            continue
-
-        prev = df["Close"].iloc[-2]
-        now = df["Close"].iloc[-1]
-
         try:
-            pct = (now - prev) / prev * 100
-        except:
-            pct = 0
+            df = yf.download(symbol, period="3d", interval="1d")
 
-        changes.append(pct)
+            if df.empty or "Close" not in df.columns:
+                continue
 
+            df = df.reset_index()
+
+            if len(df) < 2:
+                continue
+
+            prev_close = float(df["Close"].iloc[-2])
+            last_close = float(df["Close"].iloc[-1])
+
+            if prev_close <= 0:
+                continue
+
+            pct_change = ((last_close - prev_close) / prev_close) * 100
+
+            # Pastikan hasilnya float valid
+            pct_change = float(pct_change)
+
+            changes.append(pct_change)
+
+        except Exception:
+            continue
+
+    # Jika tidak ada data valid
     if len(changes) == 0:
         return None
 
     avg_change = sum(changes) / len(changes)
 
-    # Scale menjadi 0–100
-    score = round((avg_change + 5) * 10)
+    # Skala menjadi 0–100
+    score = (avg_change + 5) * 10
     score = max(0, min(score, 100))
 
-    return score
-
+    return round(score)
 
 def render_sentiment():
     st.subheader("🧭 Sentimen Pasar Indonesia")
