@@ -69,31 +69,21 @@ def badge(text, color):
     """
 
 def premium_card(title, value, subtext="", icon="💠"):
-    safe_subtext = subtext.replace("\n", "") if subtext else ""
-
-    return f"""
-        <div style="
-            padding:18px;
-            border-radius:18px;
-            background:rgba(255,255,255,0.05);
-            border:1px solid rgba(255,255,255,0.15);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-            text-align:center;
-        ">
-            <div style="font-size:15px;color:#DFE6F0;font-weight:600;margin-bottom:6px;">
-                {icon} {title}
-            </div>
-
-            <div style="font-size:34px;font-weight:700;color:white;margin-top:-4px;">
-                {value}
-            </div>
-
-            <div style="font-size:13px;color:#AAB4C2;margin-top:8px;">
-                {safe_subtext}
-            </div>
+    return f'''
+    <div style="padding:18px; border-radius:18px; background:rgba(255,255,255,0.05);
+                border:1px solid rgba(255,255,255,0.15); backdrop-filter:blur(10px);
+                box-shadow:0 4px 14px rgba(0,0,0,0.25); text-align:center;">
+        <div style="font-size:15px; color:#DFE6F0; font-weight:600; margin-bottom:6px;">
+            {icon} {title}
         </div>
-    """
+        <div style="font-size:34px; font-weight:700; color:white; margin-top:-4px;">
+            {value}
+        </div>
+        <div style="font-size:13px; color:#AAB4C2; margin-top:8px;">
+            {subtext}
+        </div>
+    </div>
+    '''
 
 def is_number(x):
     try:
