@@ -10,29 +10,32 @@ LQ45 = [
 ]
 
 def get_sentiment_index():
-    df = yf.download("^JKSE", period="7d", interval="1d")
+    # Ambil data IHSG 10 hari terakhir
+    df = yf.download("^JKSE", period="10d", interval="1d")
 
     if df.empty:
         return None
 
-    df = df.reset_index()
-
-    # Hitung perubahan harian
-    df["change"] = df["Close"].pct_change() * 100
-
-    # Buang nilai NaN
-    df = df.dropna(subset=["change"])
-
-    if df.empty:
+    # Pastikan kolom Close ada
+    if "Close" not in df.columns:
         return None
 
-    last = df.iloc[-1]
+    # Hitung persentase perubahan harian
+    change_series = df["Close"].pct_change() * 100
 
-    # Pastikan numeric
+    # Ambil nilai terakhir
+    last_change = change_series.iloc[-1]
+    last_close = df["Close"].iloc[-1]
+
+    # Handle NaN / non-numeric
     try:
-        change_val = float(last["change"])
-        close_val = float(last["Close"])
-    except:
+        change_val = float(last_change)
+    except Exception:
+        change_val = 0.0
+
+    try:
+        close_val = float(last_close)
+    except Exception:
         return None
 
     return {
@@ -61,7 +64,6 @@ def get_sector_strength():
     sentiment_score = max(0, min(sentiment_score, 100))
 
     return sentiment_score
-
 
 def render_sentiment():
     st.subheader("🧭 Sentimen Pasar Indonesia")
