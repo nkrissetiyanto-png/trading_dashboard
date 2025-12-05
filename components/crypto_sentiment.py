@@ -105,8 +105,11 @@ def render_crypto_sentiment():
 
     # --- Coloring and icons dynamically ---
     mood_icon = "🟢" if fear and fear > 55 else "🟡" if fear and fear > 25 else "🔴"
-    mom_icon = "📈" if mom and mom > 0 else "📉"
-    pulse_icon = "💹" if pulse and pulse > 0 else "📉"
+    
+    # Safe unicode icons
+    mom_icon = "\u2197" if mom and mom > 0 else "\u2198"     # ↗ vs ↘
+    pulse_icon = "\u2197" if pulse and pulse > 0 else "\u2198"
+
 
     # --- Layout ---
     c1, c2, c3, c4 = st.columns(4)
