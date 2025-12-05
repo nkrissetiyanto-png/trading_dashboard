@@ -208,6 +208,13 @@ def render_sentiment(symbol):
     ihsg = get_sentiment_index()
     market_score = get_sector_strength()
 
+    # ====== IHSG Info (Ditampilkan duluan seperti versi awal) ======
+    col_ihsg1, col_ihsg2 = st.columns(2)
+    with col_ihsg1:
+        st.metric("IHSG", ihsg["close"])
+    with col_ihsg2:
+        st.metric("Perubahan Harian", f"{ihsg['change']}%")
+    
     if ihsg is None or market_score is None:
         st.warning("Tidak dapat memuat sentimen pasar.")
         return
