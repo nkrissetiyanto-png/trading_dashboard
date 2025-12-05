@@ -91,6 +91,7 @@ def get_sector_sentiment(symbol):
         return sector, None
 
     changes = []
+
     for t in tickers:
         df = yf.download(t, period="5d", interval="1d")
         if df.empty:
@@ -100,8 +101,22 @@ def get_sector_sentiment(symbol):
         if len(df) < 2:
             continue
 
-        prev = float(df["Close"].iloc[-2])
-        last = float(df["Close"].iloc[-1])
+        # --- HANDLE CLOSE YANG AJAIB (Series/DataFrame/MultiIndex) ---
+        close_col = df["Close"]
+
+        # Kalau "Close" ternyata DataFrame (MultiIndex), ambil kolom pertamanya
+        if isinstance(close_col, pd.DataFrame):
+            close = close_col.iloc[:, 0]
+        else:
+            close = close_col
+
+        try:
+            prev = float(close.iloc[-2])
+            last = float(close.iloc[-1])
+        except Exception:
+            # Kalau tetap bermasalah, skip ticker ini
+            continue
+
         if prev <= 0:
             continue
 
@@ -111,10 +126,13 @@ def get_sector_sentiment(symbol):
     if len(changes) == 0:
         return sector, None
 
-    avg = sum(changes) / len(changes)
-    score = (avg + 5) * 10
-    return sector, max(0, min(round(score), 100))
+    avg_change = sum(changes) / len(changes)
 
+    # Convert ke score 0–100
+    score = (avg_change + 5) * 10
+    score = max(0, min(round(score), 100))
+
+    return sector, score
 
 # ============================================================
 #  🔷 Fungsi IHSG Index Sentiment
