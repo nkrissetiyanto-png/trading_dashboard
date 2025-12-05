@@ -49,33 +49,45 @@ def get_stock_sentiment(symbol):
         return None
 
     df = df.reset_index()
+
     if len(df) < 7:
         return None
 
     close = df["Close"]
 
+    # ==== Trend (EMA)
     df["EMA5"] = close.ewm(span=5).mean()
     df["EMA20"] = close.ewm(span=20).mean()
-    trend_score = 20 if df["EMA5"].iloc[-1] > df["EMA20"].iloc[-1] else 5
+    trend_score = 20 if float(df["EMA5"].iloc[-1]) > float(df["EMA20"].iloc[-1]) else 5
 
+    # ==== Momentum
     try:
         mom = float((close.iloc[-1] - close.iloc[-6]) / close.iloc[-6] * 100)
     except:
-        mom = 0
+        mom = 0.0
     mom_score = min(max(mom + 10, 0), 20)
 
-    vol = close.pct_change().std() * 100
+    # ==== Volatilitas
+    try:
+        vol_raw = close.pct_change().std()
+        vol = float(vol_raw) if vol_raw is not None else 0.0
+    except:
+        vol = 0.0
     vol_score = 20 - min(vol, 20)
 
+    # ==== Volume Pressure
     try:
-        vp = float((df["Volume"].iloc[-1] - df["Volume"].mean()) / df["Volume"].mean() * 100)
+        vp_raw = (df["Volume"].iloc[-1] - df["Volume"].mean()) / df["Volume"].mean() * 100
+        vp = float(vp_raw)
     except:
-        vp = 0
+        vp = 0.0
     vp_score = min(max(vp + 10, 0), 20)
 
+    # ==== Total Score 0–100
     total = trend_score + mom_score + vol_score + vp_score
-    return max(0, min(int(total), 100))
+    total = max(0, min(int(total), 100))
 
+    return total
 
 # ============================================================
 #  🔷 Fungsi Sentimen Sektor
