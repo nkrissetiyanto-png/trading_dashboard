@@ -7,6 +7,100 @@ LQ45 = [
     "UNVR.JK","ICBP.JK","INDF.JK","AMRT.JK"
 ]
 
+SECTOR_MAP = {
+    "BBRI.JK": "Finance",
+    "BBCA.JK": "Finance",
+    "BMRI.JK": "Finance",
+    "BBNI.JK": "Finance",
+
+    "TLKM.JK": "Telco",
+    "ISAT.JK": "Telco",
+
+    "ASII.JK": "Automotive",
+    "UNTR.JK": "Automotive",
+
+    "UNVR.JK": "Consumer",
+    "ICBP.JK": "Consumer",
+    "INDF.JK": "Consumer",
+
+    "ADRO.JK": "Energy",
+    "BYAN.JK": "Energy",
+}
+
+SECTOR_COMPONENTS = {
+    "Finance": ["BBRI.JK","BBCA.JK","BMRI.JK","BBNI.JK"],
+    "Telco": ["TLKM.JK","ISAT.JK"],
+    "Automotive": ["ASII.JK","UNTR.JK"],
+    "Consumer": ["UNVR.JK","ICBP.JK","INDF.JK"],
+    "Energy": ["ADRO.JK","BYAN.JK"]
+}
+
+def get_sector_sentiment(symbol):
+    sector = SECTOR_MAP.get(symbol, None)
+    if sector is None:
+        return None, None
+
+    tickers = SECTOR_COMPONENTS.get(sector, [])
+    if len(tickers) == 0:
+        return None, None
+
+    changes = []
+
+    for t in tickers:
+        df = yf.download(t, period="5d", interval="1d")
+        if df.empty:
+            continue
+        df = df.reset_index()
+        if len(df) < 2:
+            continue
+
+        prev = float(df["Close"].iloc[-2])
+        last = float(df["Close"].iloc[-1])
+        pct = (last - prev) / prev * 100
+        changes.append(pct)
+
+    if len(changes) == 0:
+        return sector, None
+
+    avg_change = sum(changes) / len(changes)
+
+    # Convert to 0–100
+    score = (avg_change + 5) * 10
+    score = max(0, min(score, 100))
+    score = round(score)
+
+    return sector, score
+    
+def get_stock_sentiment(symbol):
+    df = yf.download(symbol, period="20d", interval="1d")
+    if df.empty:
+        return None
+
+    df = df.reset_index()
+
+    # Trend
+    df["EMA5"] = df["Close"].ewm(span=5).mean()
+    df["EMA20"] = df["Close"].ewm(span=20).mean()
+
+    trend_score = 20 if df["EMA5"].iloc[-1] > df["EMA20"].iloc[-1] else 5
+
+    # Momentum (5-day change)
+    mom = (df["Close"].iloc[-1] - df["Close"].iloc[-6]) / df["Close"].iloc[-6] * 100
+    mom_score = min(max(mom + 10, 0), 20)
+
+    # Volatility
+    vol = df["Close"].pct_change().std() * 100
+    vol_score = 20 - min(vol, 20)
+
+    # Volume Pressure
+    vp = (df["Volume"].iloc[-1] - df["Volume"].mean()) / df["Volume"].mean() * 100
+    vp_score = min(max(vp + 10, 0), 20)
+
+    total = trend_score + mom_score + vol_score + vp_score
+    total = max(0, min(total, 100))
+
+    return round(total)
+
 def get_sentiment_index():
     df = yf.download("^JKSE", period="10d", interval="1d")
 
@@ -73,8 +167,15 @@ def render_sentiment():
     st.subheader("🧭 Sentimen Pasar Indonesia")
 
     idx = get_sentiment_index()
-    score = get_sector_strength()
+    #score = get_sector_strength()
+    market_score = get_sector_strength()
 
+    # Sector
+    sector, sector_score = get_sector_sentiment(symbol)
+
+    # Stock
+    stock_score = get_stock_sentiment(symbol)
+    
     if idx is None or score is None:
         st.warning("Tidak dapat memuat sentimen pasar.")
         return
@@ -87,14 +188,20 @@ def render_sentiment():
         mood = "🔴 Bearish"
 
     col1, col2, col3 = st.columns(3)
-
     with col1:
-        st.metric("IHSG", idx["close"])
-
+        st.metric("Market Sentiment", f"{market_score}/100")
+    
     with col2:
-        st.metric("Perubahan Harian", f"{idx['change']}%")
-
+        if sector_score:
+            st.metric(f"{sector} Sector", f"{sector_score}/100")
+        else:
+            st.metric("Sector", "-")
+    
     with col3:
-        st.metric("Sentimen", f"{score}/100", mood)
+        if stock_score:
+            st.metric(f"{symbol} Sentiment", f"{stock_score}/100")
+        else:
+            st.metric("Stock", "-")
+
 
     st.progress(score)
