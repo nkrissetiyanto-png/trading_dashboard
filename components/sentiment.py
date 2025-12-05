@@ -166,9 +166,14 @@ def get_sector_strength():
 def render_sentiment(symbol):
     st.subheader("🧭 Sentimen Pasar Indonesia")
 
-    # Market sentiment (IHSG + LQ45)
+    # Market sentiment
     idx = get_sentiment_index()
     market_score = get_sector_strength()
+
+    # Jika market gagal → stop
+    if idx is None or market_score is None:
+        st.warning("Tidak dapat memuat sentimen pasar.")
+        return
 
     # Sector sentiment
     sector, sector_score = get_sector_sentiment(symbol)
@@ -176,12 +181,7 @@ def render_sentiment(symbol):
     # Stock sentiment
     stock_score = get_stock_sentiment(symbol)
 
-    # Jika market sentiment gagal → stop
-    if idx is None or market_score is None:
-        st.warning("Tidak dapat memuat sentimen pasar.")
-        return
-
-    # Tentukan mood
+    # Tentukan mood dari market
     if market_score >= 70:
         mood = "🟢 Bullish"
     elif market_score >= 40:
@@ -207,6 +207,6 @@ def render_sentiment(symbol):
         else:
             st.metric("Stock", "N/A")
 
-    # Progress Bar Market
+    # Progress bar for market sentiment
     st.progress(market_score)
 
