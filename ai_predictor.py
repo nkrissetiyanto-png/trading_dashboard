@@ -10,12 +10,16 @@ FEATURES = [
 class AIPredictor:
 
     def __init__(self, model_path="direction_model.pkl"):
-        self.model = joblib.load(model_path)
-
+        try:
+            self.model = joblib.load(model_path)
+        except FileNotFoundError:
+            print("⚠️ MODEL NOT FOUND — AI prediction disabled.")
+            self.model = None
+    
     def predict_direction(self, df_original):
-        #"""
-        #Predict UP/DOWN probability from last row.
-        #"""
+        """
+        Predict UP/DOWN probability from last row.
+        """
         df = add_features(df_original.copy())
 
         latest = df.iloc[-1:][FEATURES]
