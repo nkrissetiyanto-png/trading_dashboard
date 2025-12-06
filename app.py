@@ -9,7 +9,7 @@ from components.smartmoney import render_smartmoney
 from components.signals import render_signals
 from components.sentiment import render_sentiment
 from components.crypto_sentiment import render_crypto_sentiment
-#from components.ai_signal import render_ai_signal
+from components.ai_signal import render_ai_signal
 from data.data_loader import load_candles
 
 
