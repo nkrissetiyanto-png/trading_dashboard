@@ -222,7 +222,7 @@ def render_sentiment(symbol):
     
     with col_ihsg1:
         st.metric("IHSG", ihsg["close"])
-        st.markdown(badge, unsafe_allow_html=True)
+        #st.markdown(badge, unsafe_allow_html=True)
     
     with col_ihsg2:
         st.metric("Perubahan Harian", f"{change}%")
