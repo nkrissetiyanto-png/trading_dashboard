@@ -6,3 +6,4 @@ yfinance
 requests
 joblib
 ta
+scikit-learn
