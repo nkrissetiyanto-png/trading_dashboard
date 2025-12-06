@@ -1,38 +1,34 @@
-import pandas as pd
 import joblib
-from features.feature_engineering import add_features
+import pandas as pd
+from data.feature_engineering import add_features
 
-FEATURES = [
-    "return", "sma5", "sma10", "ema5", "ema10",
-    "rsi", "macd", "signal", "vol_change", "body"
-]
+MODEL_PATH = "models/crypto_ai_model.pkl"
 
 class AIPredictor:
-
-    def __init__(self, model_path="direction_model.pkl"):
+    def __init__(self):
         try:
-            self.model = joblib.load(model_path)
+            self.model = joblib.load(MODEL_PATH)
+            print("🤖 AI Model Loaded Successfully")
         except FileNotFoundError:
-            print("⚠️ MODEL NOT FOUND — AI prediction disabled.")
+            print("⚠️ MODEL NOT FOUND — AI disabled.")
             self.model = None
-    
-    def predict_direction(self, df_original):
-        """
-        Predict UP/DOWN probability from last row.
-        """
-        df = add_features(df_original.copy())
 
-        latest = df.iloc[-1:][FEATURES]
+        self.FEATURES = [
+            "return","sma5","sma10","ema5","ema10",
+            "rsi","macd","signal","vol_change","body"
+        ]
 
-        proba_up = self.model.predict_proba(latest)[0][1]
-        direction = "UP" if proba_up > 0.5 else "DOWN"
+    def predict(self, df):
+        if self.model is None:
+            return None
+        
+        df = add_features(df)[-1:]  # last row only
+        X = df[self.FEATURES]
+        prob = self.model.predict_proba(X)[0]
 
-        return direction, float(proba_up)
-
-
-if __name__ == "__main__":
-    import yfinance as yf
-    df = yf.download("BTC-USD", interval="15m", period="5d")
-    predictor = AIPredictor()
-    direction, prob = predictor.predict_direction(df)
-    print(direction, prob)
+        return {
+            "direction": "UP" if prob[1] > 0.5 else "DOWN",
+            "prob_up": float(prob[1]),
+            "prob_down": float(prob[0]),
+            "confidence": float(abs(prob[1] - prob[0]))
+        }
