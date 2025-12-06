@@ -13,9 +13,9 @@ class AIPredictor:
         self.model = joblib.load(model_path)
 
     def predict_direction(self, df_original):
-        """
-        Predict UP/DOWN probability from last row.
-        """
+        #"""
+        #Predict UP/DOWN probability from last row.
+        #"""
         df = add_features(df_original.copy())
 
         latest = df.iloc[-1:][FEATURES]
