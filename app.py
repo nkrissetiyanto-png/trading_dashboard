@@ -1,6 +1,5 @@
 import time
 import streamlit as st
-import subprocess
 
 from components.chart import render_chart
 from components.indicators import render_indicators
