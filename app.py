@@ -98,14 +98,8 @@ refresh_rate = st.sidebar.slider("Refresh (seconds)", 3, 30, 5)
 if st.sidebar.button("Train Model"):
     st.sidebar.write("Training dimulai...")
 
-    #process = subprocess.Popen(
-    #    ["python", "ai/train_crypto_ai.py"], 
-    #    stdout=subprocess.PIPE, 
-    #    stderr=subprocess.STDOUT,
-    #    text=True
-    #)
     process = subprocess.Popen(
-        ["pip install", "pandas"], 
+        ["python", "ai/train_crypto_ai.py"], 
         stdout=subprocess.PIPE, 
         stderr=subprocess.STDOUT,
         text=True
