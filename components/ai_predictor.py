@@ -34,7 +34,7 @@ class AIPredictor:
 
         return np.array([price_mom, vol_mom, candle])
 
-    def predict_direction(self, df):
+    def predict(self, df):
         """
         Return:
             ("UP"/"DOWN", probability)
