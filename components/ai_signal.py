@@ -5,6 +5,7 @@ ai = AIPredictor()
 
 def render_ai_signal(df):
     st.subheader("🔮 AI Price Prediction (15m)")
+    st.write("DEBUG — Data length:", len(df))
 
     result = ai.predict(df)
     if result is None:
