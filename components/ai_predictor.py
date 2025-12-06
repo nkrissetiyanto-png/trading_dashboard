@@ -1,6 +1,6 @@
 import pandas as pd
 import joblib
-from feature_engineering import add_features
+from features.feature_engineering import add_features
 
 FEATURES = [
     "return", "sma5", "sma10", "ema5", "ema10",
