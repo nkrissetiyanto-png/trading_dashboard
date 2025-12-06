@@ -94,6 +94,25 @@ interval = st.sidebar.selectbox(
 auto_refresh = st.sidebar.checkbox("Auto Refresh", True)
 refresh_rate = st.sidebar.slider("Refresh (seconds)", 3, 30, 5)
 
+if st.sidebar.button("Train Model"):
+    st.sidebar.write("Training dimulai...")
+
+    process = subprocess.Popen(
+        ["python", "train_crypto_ai.py"], 
+        stdout=subprocess.PIPE, 
+        stderr=subprocess.STDOUT,
+        text=True
+    )
+
+    log_area = st.empty()
+    log_text = ""
+
+    for line in process.stdout:
+        log_text += line
+        log_area.text(log_text)
+
+    process.wait()
+    st.sidebar.success("Training selesai!")
 
 # ======================================================
 # MAIN PAGE CONTAINER (ANTI FLICKER)
