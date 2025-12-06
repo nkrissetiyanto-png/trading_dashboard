@@ -35,19 +35,58 @@ class AIPredictor:
         return np.array([price_mom, vol_mom, candle])
 
     def predict(self, df):
-        """
-        Return:
-            ("UP"/"DOWN", probability)
-        """
 
-        feats = self._extract_features(df).reshape(1, -1)
+        # Safety check
+        if df is None or len(df) < 30:
+            return {
+                "direction": "N/A",
+                "prob_up": 0.0,
+                "prob_down": 0.0,
+                "confidence": 0.0
+            }
 
+        # Create features
         try:
-            feats_scaled = self.scaler.transform(feats)
-            prob = self.model.predict_proba(feats_scaled)[0][1]  # prob of UP
-        except:
-            prob = 0.5
+            feats = add_features(df.copy())
+        except Exception as e:
+            print("Feature engineering error:", e)
+            return {
+                "direction": "N/A",
+                "prob_up": 0.0,
+                "prob_down": 0.0,
+                "confidence": 0.0
+            }
 
-        direction = "UP" if prob >= 0.5 else "DOWN"
+        last = feats.iloc[-1]
 
-        return direction, prob
+        # RULE-BASED AI (no ML model)
+        score = 0
+        total = 4
+
+        # Return momentum
+        if last["return"] > 0:
+            score += 1
+
+        # MACD
+        if last["macd"] > last["signal"]:
+            score += 1
+
+        # RSI
+        if last["rsi"] < 30:
+            score += 1
+        elif last["rsi"] > 70:
+            score -= 1
+
+        # Volume expansion
+        if last["vol_change"] > 0:
+            score += 1
+
+        normalized = (score + 1) / total   # convert score range to 0–1
+        direction = "UP" if normalized >= 0.5 else "DOWN"
+
+        return {
+            "direction": direction,
+            "prob_up": float(normalized),
+            "prob_down": float(1 - normalized),
+            "confidence": abs(0.5 - normalized) * 2
+        }
