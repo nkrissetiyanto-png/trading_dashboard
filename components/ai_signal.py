@@ -1,5 +1,5 @@
 import streamlit as st
-from components.ai_predictor import AIPredictor
+from ai_predictor import AIPredictor
 
 ai = AIPredictor()
 
