@@ -134,6 +134,20 @@ def get_volume_pulse():
         return None
 
 
+def get_price(symbol="BTC-USD"):
+    try:
+        df = yf.download(symbol, period="1d", interval="1m")
+        if df.empty:
+            return None, None
+
+        current = float(df["Close"].iloc[-1])
+        prev = float(df["Close"].iloc[-2])
+        change = (current - prev) / prev * 100
+        return round(current, 2), round(change, 2)
+
+    except:
+        return None, None
+
 # ===================== UI COMPONENTS =====================
 
 def badge(text, color):
@@ -176,6 +190,22 @@ def render_crypto_sentiment():
     mom_icon = "↗" if (mom is not None and mom > 0) else "↘"
     pulse_icon = "↗" if (pulse is not None and pulse > 0) else "↘"
 
+    # === Current Price ===
+    price, change = get_price("BTC-USD")
+    if price:
+        color = "#22c55e" if change > 0 else "#ef4444"
+        st.markdown(
+            f"""
+            <div style="font-size:22px; font-weight:700; color:white; margin-top:10px;">
+                💰 Current Price: ${price:,.2f}
+                <span style="color:{color}; font-size:18px; margin-left:8px;">
+                    ({change:+.2f}%)
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        
     c1, c2, c3, c4 = st.columns(4)
 
     # Card 1 – Fear & Greed
