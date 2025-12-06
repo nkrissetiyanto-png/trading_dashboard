@@ -1,65 +1,53 @@
 import numpy as np
 import pandas as pd
-from components.feature_engineering import add_features
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
 
 class AIPredictor:
+
     def __init__(self):
-        pass
+        self.model = LogisticRegression()
+        self.scaler = StandardScaler()
+
+        # Dummy training (supaya model tidak error saat pertama running)
+        X = np.array([[0, 0, 0], [1, 1, 1]])
+        y = np.array([0, 1])
+        self.scaler.fit(X)
+        X_scaled = self.scaler.transform(X)
+        self.model.fit(X_scaled, y)
+
+    def _extract_features(self, df):
+        """
+        Feature engineering sederhana:
+        - return 3 fitur: price momentum, volume momentum, candle body strength
+        """
+        close = df["Close"].values
+        volume = df["Volume"].values
+
+        # Momentum 1 jam (4 candle 15m)
+        if len(close) < 10:
+            return np.array([0, 0, 0])
+
+        price_mom = (close[-1] - close[-4]) / close[-4] * 100
+        vol_mom = (volume[-1] - np.mean(volume[-10:])) / np.mean(volume[-10:]) * 100
+        candle = close[-1] - df["Open"].values[-1]
+
+        return np.array([price_mom, vol_mom, candle])
 
     def predict(self, df):
         """
-        AI fallback (rule-based).
-        Works even without sklearn or .pkl model.
+        Return:
+            ("UP"/"DOWN", probability)
         """
 
-        if df is None or len(df) < 20:
-            return {
-                "direction": "N/A",
-                "prob_up": 0.0,
-                "prob_down": 0.0,
-                "confidence": 0.0
-            }
+        feats = self._extract_features(df).reshape(1, -1)
 
-        # Tambah fitur ML
         try:
-            df = add_features(df.copy())
-        except Exception as e:
-            print("Feature engineering error:", e)
-            return {
-                "direction": "N/A",
-                "prob_up": 0.0,
-                "prob_down": 0.0,
-                "confidence": 0.0
-            }
+            feats_scaled = self.scaler.transform(feats)
+            prob = self.model.predict_proba(feats_scaled)[0][1]  # prob of UP
+        except:
+            prob = 0.5
 
-        last = df.iloc[-1]
+        direction = "UP" if prob >= 0.5 else "DOWN"
 
-        signals = []
-
-        # Return momentum
-        signals.append(1 if last["return"] > 0 else 0)
-
-        # RSI
-        if last["rsi"] < 30:
-            signals.append(1)
-        elif last["rsi"] > 70:
-            signals.append(0)
-
-        # MACD crossover
-        signals.append(1 if last["macd"] > last["signal"] else 0)
-
-        # Volume expansion
-        signals.append(1 if last["vol_change"] > 0 else 0)
-
-        score = np.mean(signals)
-
-        direction = "UP" if score >= 0.5 else "DOWN"
-        prob_up = float(score)
-        prob_down = float(1 - score)
-
-        return {
-            "direction": direction,
-            "prob_up": prob_up,
-            "prob_down": prob_down,
-            "confidence": abs(prob_up - prob_down)
-        }
+        return direction, prob
