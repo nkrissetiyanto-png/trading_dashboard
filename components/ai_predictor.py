@@ -1,34 +1,53 @@
+import numpy as np
 import pandas as pd
-import joblib
-from features.feature_engineering import add_features
-
-FEATURES = [
-    "return", "sma5", "sma10", "ema5", "ema10",
-    "rsi", "macd", "signal", "vol_change", "body"
-]
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
 
 class AIPredictor:
 
-    def __init__(self, model_path="direction_model.pkl"):
-        self.model = joblib.load(model_path)
+    def __init__(self):
+        self.model = LogisticRegression()
+        self.scaler = StandardScaler()
 
-    def predict_direction(self, df_original):
+        # Dummy training (supaya model tidak error saat pertama running)
+        X = np.array([[0, 0, 0], [1, 1, 1]])
+        y = np.array([0, 1])
+        self.scaler.fit(X)
+        X_scaled = self.scaler.transform(X)
+        self.model.fit(X_scaled, y)
+
+    def _extract_features(self, df):
         """
-        Predict UP/DOWN probability from last row.
+        Feature engineering sederhana:
+        - return 3 fitur: price momentum, volume momentum, candle body strength
         """
-        df = add_features(df_original.copy())
+        close = df["Close"].values
+        volume = df["Volume"].values
 
-        latest = df.iloc[-1:][FEATURES]
+        # Momentum 1 jam (4 candle 15m)
+        if len(close) < 10:
+            return np.array([0, 0, 0])
 
-        proba_up = self.model.predict_proba(latest)[0][1]
-        direction = "UP" if proba_up > 0.5 else "DOWN"
+        price_mom = (close[-1] - close[-4]) / close[-4] * 100
+        vol_mom = (volume[-1] - np.mean(volume[-10:])) / np.mean(volume[-10:]) * 100
+        candle = close[-1] - df["Open"].values[-1]
 
-        return direction, float(proba_up)
+        return np.array([price_mom, vol_mom, candle])
 
+    def predict_direction(self, df):
+        """
+        Return:
+            ("UP"/"DOWN", probability)
+        """
 
-if __name__ == "__main__":
-    import yfinance as yf
-    df = yf.download("BTC-USD", interval="15m", period="5d")
-    predictor = AIPredictor()
-    direction, prob = predictor.predict_direction(df)
-    print(direction, prob)
+        feats = self._extract_features(df).reshape(1, -1)
+
+        try:
+            feats_scaled = self.scaler.transform(feats)
+            prob = self.model.predict_proba(feats_scaled)[0][1]  # prob of UP
+        except:
+            prob = 0.5
+
+        direction = "UP" if prob >= 0.5 else "DOWN"
+
+        return direction, prob
