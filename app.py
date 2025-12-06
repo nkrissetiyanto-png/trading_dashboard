@@ -139,7 +139,7 @@ while True:
             else:
                 render_crypto_sentiment()
 
-            render_ai_signal(df)
+            #render_ai_signal(df)
             render_signals(df)
 
         with col2:
