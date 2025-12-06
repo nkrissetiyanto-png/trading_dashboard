@@ -1,5 +1,6 @@
 import time
 import streamlit as st
+import subprocess
 
 from components.chart import render_chart
 from components.indicators import render_indicators
@@ -98,7 +99,7 @@ if st.sidebar.button("Train Model"):
     st.sidebar.write("Training dimulai...")
 
     process = subprocess.Popen(
-        ["python", "train_crypto_ai.py"], 
+        ["python", "ai/train_crypto_ai.py"], 
         stdout=subprocess.PIPE, 
         stderr=subprocess.STDOUT,
         text=True
