@@ -3,73 +3,31 @@ from ai_predictor import AIPredictor
 
 ai = AIPredictor()
 
-# ======================== PREMIUM CSS ========================
-AI_CSS = """
-<style>
-.ai-card {
-    padding:20px;
-    border-radius:20px;
-    background:rgba(255,255,255,0.07);
-    border:1px solid rgba(255,255,255,0.18);
-    backdrop-filter: blur(12px);
-    box-shadow:0 6px 20px rgba(0,0,0,0.35);
-    text-align:center;
-    margin-top:15px;
-}
-.ai-title {
-    font-size:18px;
-    color:#E5ECF5;
-    font-weight:600;
-}
-.ai-value {
-    font-size:36px;
-    font-weight:800;
-    margin-top:4px;
-}
-.ai-sub {
-    font-size:14px;
-    color:#AAB4C2;
-    margin-top:6px;
-}
-</style>
-"""
-
 def render_ai_signal(df):
+    st.subheader("🔮 AI Price Prediction (15m)")
 
-    st.markdown(AI_CSS, unsafe_allow_html=True)
+    result = ai.predict(df)
+    if result is None:
+        st.warning("AI model unavailable.")
+        return
 
-    direction, prob = ai.predict_direction(df)
+    direction = result["direction"]
+    prob_up = result["prob_up"]
+    prob_down = result["prob_down"]
+    conf = result["confidence"]
 
-    pct = round(prob * 100, 2)
-
-    # Determine colors & emojis
-    if direction == "UP":
-        emoji = "🚀"
-        color = "linear-gradient(90deg, #2ecc71, #27ae60)"
-    else:
-        emoji = "📉"
-        color = "linear-gradient(90deg, #e74c3c, #c0392b)"
-
-    # Simple AI explanation (auto)
-    if direction == "UP":
-        explanation = (
-            "Model mendeteksi momentum bullish, volume positif, dan sinyal MACD "
-            "yang cenderung menguat. Probabilitas harga naik cukup tinggi."
-        )
-    else:
-        explanation = (
-            "Model melihat tekanan jual meningkat, momentum melemah, dan pola candle "
-            "cenderung bearish. Risiko penurunan lebih dominan."
-        )
+    color = "🟢" if direction == "UP" else "🔴"
 
     st.markdown(f"""
-        <div class="ai-card">
-            <div class="ai-title">{emoji} AI Prediction</div>
-            <div class="ai-value" style="background:{color};
-                 -webkit-background-clip:text; color:transparent;">
-                {direction}
-            </div>
-            <div class="ai-sub">Confidence: <b>{pct}%</b></div>
-            <div class="ai-sub">{explanation}</div>
-        </div>
-    """, unsafe_allow_html=True)
+        ### {color} Prediction: **{direction}**
+        **Confidence:** {conf*100:.2f}%  
+        **Up:** {prob_up*100:.2f}%  
+        **Down:** {prob_down*100:.2f}%
+    """)
+
+    if direction == "UP" and conf > 0.3:
+        st.success("Strong BUY signal")
+    elif direction == "DOWN" and conf > 0.3:
+        st.error("Strong SELL signal")
+    else:
+        st.info("Market uncertain — Scalping only.")
