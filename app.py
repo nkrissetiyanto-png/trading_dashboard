@@ -59,8 +59,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# Component HTML untuk loading overlay
 def premium_loading():
+    """Overlay loading premium."""
     st.markdown("""
     <div class="loader-overlay">
         <div class="premium-loader"></div>
@@ -106,12 +106,12 @@ page = st.empty()
 # ======================================================
 while True:
 
-    # --- SHOW PREMIUM LOADING FIRST ---
+    # --- tampilkan loading overlay ---
     loading_area = st.empty()
     with loading_area:
         premium_loading()
 
-    # --- LOAD DATA SAFELY ---
+    # --- load data ---
     try:
         df = load_candles(symbol, interval, mode)
     except Exception as e:
@@ -119,12 +119,10 @@ while True:
         st.error(f"❌ Gagal memuat data: {e}")
         st.stop()
 
-    # === Remove loader once finished ===
+    # --- hilangkan loader setelah data siap ---
     loading_area.empty()
 
-    # ==================================================
-    # RENDER PAGE INSIDE STABLE CONTAINER
-    # ==================================================
+    # --- render semua konten di container stabil ---
     with page.container():
 
         st.title(f"🔥 Nanang Premium Dashboard — {symbol}")
@@ -149,11 +147,9 @@ while True:
             else:
                 st.info("Orderbook tidak tersedia untuk saham Indo.")
 
-    # ==================================================
-    # AUTO REFRESH LOOP CONTROL
-    # ==================================================
+    # --- kontrol auto refresh ---
     if not auto_refresh:
         break
 
     time.sleep(refresh_rate)
-    st.experimental_rerun()
+    st.rerun()    # ⬅️ ganti ke st.rerun, bukan experimental_rerun
