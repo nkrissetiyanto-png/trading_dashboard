@@ -17,6 +17,33 @@ def safe_float(x):
         return None
 
 
+def badge(text, color):
+    return f"""<span style="background-color:{color}; padding:4px 10px; border-radius:8px; color:white; font-size:12px; font-weight:600; display:inline-block;">{text}</span>"""
+
+
+def premium_card(title, value, sub_html="", icon="💠"):
+    return f"""
+    <div style="
+        padding:18px;
+        border-radius:18px;
+        background:rgba(255,255,255,0.05);
+        border:1px solid rgba(255,255,255,0.15);
+        backdrop-filter:blur(10px);
+        box-shadow:0 4px 14px rgba(0,0,0,0.25);
+        text-align:center;
+    ">
+        <p style="font-size:15px; color:#DFE6F0; font-weight:600; margin-bottom:6px;">
+            {icon} {title}
+        </p>
+        <p style="font-size:32px; font-weight:700; color:white; margin-top:-4px;">
+            {value}
+        </p>
+        <div style="font-size:13px; color:#AAB4C2; margin-top:8px;">
+            {sub_html}
+        </div>
+    </div>
+    """
+
 # ============================================================
 # 1) IHSG SENTIMENT
 # ============================================================
