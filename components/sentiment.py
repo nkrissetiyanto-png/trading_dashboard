@@ -41,40 +41,58 @@ SECTOR_MAP = {
 
 def get_sector_sentiment(symbol):
     """
-    Hitung sentimen sektor berdasarkan saham-saham dalam sektor yang sama.
-    Jika sektor tidak ditemukan → netral (50).
+    Menghitung sentimen sektor berbasis 3–5 saham sektor lain (proxy).
+    Anti-error bila data kosong atau gagal ambil data.
     """
+    # Mapping sektor → saham pembanding
+    SECTOR_MAP = {
+        "Finance": ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"],
+        "Telco": ["TLKM.JK", "ISAT.JK"],
+        "Consumer": ["UNVR.JK", "ICBP.JK", "INDF.JK"],
+        "Retail": ["AMRT.JK", "MAPI.JK"],
+        "Energy": ["PGAS.JK", "MEDC.JK"],
+    }
 
-    sector = SECTOR_MAP.get(symbol.upper(), "Unknown")
+    # Cari sektor dari symbol
+    sector_name = None
+    for sec, syms in SECTOR_MAP.items():
+        if symbol.upper() in syms:
+            sector_name = sec
+            break
 
-    # Jika sektor tidak dikenal
-    if sector == "Unknown":
-        return "Unknown", 50
+    if sector_name is None:
+        return "Unknown", 50  # default neutral
 
-    # Ambil semua saham dalam sektor
-    peers = [s for s, sec in SECTOR_MAP.items() if sec == sector]
+    reference_stocks = SECTOR_MAP[sector_name]
 
     scores = []
-    for s in peers:
+
+    for s in reference_stocks:
         try:
             df = yf.download(s, period="7d", interval="1d")
-            if df.empty or len(df) < 2:
-                continue
             close = df["Close"].dropna()
-            chg = (close.iloc[-1] - close.iloc[-2]) / close.iloc[-2] * 100
-            scores.append(chg)
-        except:
+
+            if len(close) < 2:
+                continue
+
+            change = (close.iloc[-1] - close.iloc[-2]) / close.iloc[-2] * 100
+            scores.append(change)
+
+        except Exception:
             continue
 
+    # ❗ Anti-error: Jika skor kosong → return neutral
     if len(scores) == 0:
-        return sector, 50
+        return sector_name, 50  # sektor netral
 
-    avg_score = np.mean(scores)
+    # Jika ada skor valid
+    avg_score = float(np.mean(scores))
 
-    # Scale ke 0–100
-    scaled = np.clip(round(avg_score + 50), 0, 100)
+    # Normalisasi 0–100
+    norm_score = max(0, min(round((avg_score + 5) * 10), 100))
 
-    return sector, scaled
+    return sector_name, norm_score
+
 
 
 # ============================================================
