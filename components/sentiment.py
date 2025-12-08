@@ -257,15 +257,22 @@ def render_sentiment(symbol):
                   f"{stock_score}/100" if stock_score else "N/A")
 
     st.progress(market_score)
+    
     # === Foreign Flow ===
     flow_score, flow_bias, eido_chg, rupiah_chg, vol_ratio = get_foreign_flow()
-    
+
     st.markdown("### 🌍 Foreign Flow (Investor Asing)")
     
-    st.metric("Foreign Flow Score", f"{flow_score}/100")
+    # Safe formatting
+    eido_val   = f"{eido_chg:.2f}%" if isinstance(eido_chg, (int, float)) else "N/A"
+    rupiah_val = f"{rupiah_chg:.2f}%" if isinstance(rupiah_chg, (int, float)) else "N/A"
+    vol_val    = f"{vol_ratio:.2f}%" if isinstance(vol_ratio, (int, float)) else "N/A"
+    
+    score_val = f"{flow_score}/100" if flow_score is not None else "N/A"
+    
+    st.metric("Foreign Flow Score", score_val)
     st.write(f"**Status:** {flow_bias}")
     
-    st.write(f"- EIDO Change: {eido_chg:.2f}%")
-    st.write(f"- Rupiah Strength: {rupiah_chg:.2f}%")
-    st.write(f"- IHSG Volume Ratio: {vol_ratio:.2f}%")
-
+    st.write(f"- EIDO Change: {eido_val}")
+    st.write(f"- Rupiah Strength: {rupiah_val}")
+    st.write(f"- IHSG Volume Ratio: {vol_val}")
