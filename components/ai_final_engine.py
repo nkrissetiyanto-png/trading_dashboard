@@ -1,5 +1,3 @@
-import streamlit as st
-from components.ai_predictor import AIPredictor
 from components.ai_reversal import detect_reversal
 from components.smartmoney import compute_smart_money
 
@@ -20,8 +18,8 @@ def final_decision_engine(df, trend_result, sensitivity=1.0):
         decision = "BUY"
         reason = [
             "Trend bullish",
-            "Reversal hammer detected",
-            "Smart money inflow" if smart == "BULLISH" else "Market still healthy",
+            "Reversal hammer terdeteksi",
+            f"Smart Money: {smart}",
         ]
 
     # Strong SELL
@@ -29,30 +27,31 @@ def final_decision_engine(df, trend_result, sensitivity=1.0):
         decision = "SELL"
         reason = [
             "Trend bearish",
-            "Bearish wick reversal detected",
-            "Smart money outflow" if smart == "BEARISH" else "Volume weakening",
+            "Reversal bearish wick terdeteksi",
+            f"Smart Money: {smart}",
         ]
 
-    # EARLY BUY (bottom reversal)
+    # Early BUY
     elif trend_dir == "DOWN" and reversal_signal == "UP":
         decision = "REVERSAL BUY"
         reason = [
-            "Trend masih turun tetapi muncul hammer",
+            "Trend turun tapi reversal terdeteksi",
             "Potensi pembalikan arah",
-            "Momentum kemungkinan berubah",
         ]
 
-    # EARLY SELL (top reversal)
+    # Early SELL / Take Profit
     elif trend_dir == "UP" and reversal_signal == "DOWN":
         decision = "TAKE PROFIT"
         reason = [
-            "Trend naik tetapi muncul shooting star",
-            "Potensi market top → pembalikan mungkin terjadi",
+            "Trend naik tapi reversal bearish terdeteksi",
+            "Potensi market top",
         ]
 
-    # No alignment → WAIT
     else:
         decision = "WAIT"
-        reason = ["Tidak ada sinyal kuat", "Trend dan reversal tidak sinkron"]
+        reason = [
+            "Tidak ada alignment antara trend & reversal",
+            f"Smart Money: {smart}",
+        ]
 
     return decision, reason, reversal_signal, smart
