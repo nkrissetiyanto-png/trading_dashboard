@@ -4,21 +4,11 @@ import yfinance as yf
 import numpy as np
 import pandas as pd
 
-# ===================== API FUNCTIONS =====================
 
-def get_fear_greed():
-    try:
-        url = "https://api.alternative.me/fng/?limit=1&format=json"
-        data = requests.get(url, timeout=5).json()
-        value = int(data["data"][0]["value"])
-        rating = data["data"][0]["value_classification"]
-        return value, rating
-    except Exception:
-        return None, None
-
+# ===================== HELPERS =====================
 
 def _safe_float(x):
-    """Convert apa pun ke float scalar, atau None jika gagal."""
+    """Konversi apa pun ke float scalar, atau None jika gagal."""
     try:
         if isinstance(x, (list, tuple, np.ndarray)):
             if len(x) == 0:
@@ -38,11 +28,21 @@ def _safe_float(x):
         return None
 
 
-def get_coin_momentum(symbol):
-    """
-    Momentum 7 hari untuk coin spesifik.
-    symbol: BTCUSDT, ETHUSDT, SOLUSDT, dll.
-    """
+# ===================== API FUNCTIONS =====================
+
+def get_fear_greed():
+    try:
+        url = "https://api.alternative.me/fng/?limit=1&format=json"
+        data = requests.get(url, timeout=5).json()
+        value = int(data["data"][0]["value"])
+        rating = data["data"][0]["value_classification"]
+        return value, rating
+    except Exception:
+        return None, None
+
+
+def get_coin_momentum(symbol: str):
+    """Momentum 7 hari untuk coin spesifik (BTCUSDT, ETHUSDT, dll)."""
     try:
         ticker = symbol.replace("USDT", "") + "-USD"
         df = yf.download(ticker, period="10d", interval="1d")
@@ -57,10 +57,8 @@ def get_coin_momentum(symbol):
         return None
 
 
-def get_volume_pulse(symbol):
-    """
-    Volume pulse: seberapa besar perubahan volume terhadap rata-rata 10 hari terakhir.
-    """
+def get_volume_pulse(symbol: str):
+    """Volume pulse terhadap rata-rata ~20 hari."""
     try:
         ticker = symbol.replace("USDT", "") + "-USD"
         df = yf.download(ticker, period="20d", interval="1d")
@@ -72,17 +70,15 @@ def get_volume_pulse(symbol):
         base = vol.mean()
         if base == 0 or np.isnan(base):
             return None
+
         pulse = (vol.iloc[-1] - base) / base * 100
         return round(float(pulse), 2)
     except Exception:
         return None
 
 
-def get_btc_dominance(symbol):
-    """
-    BTC dominance hanya relevan kalau symbol adalah BTC*.
-    Untuk coin lain: return None.
-    """
+def get_btc_dominance(symbol: str):
+    """BTC dominance hanya relevan bila symbol diawali BTC."""
     if not symbol.upper().startswith("BTC"):
         return None
 
@@ -95,7 +91,7 @@ def get_btc_dominance(symbol):
         return None
 
 
-# ===================== BADGE & CARD COMPONENT =====================
+# ===================== UI COMPONENTS =====================
 
 def badge(text, color):
     return f"""
@@ -112,7 +108,7 @@ def badge(text, color):
 
 
 def premium_card(title, value, subtext="", icon="💠"):
-    return f'''
+    return f"""
     <div style="padding:18px; border-radius:18px; background:rgba(255,255,255,0.05);
                 border:1px solid rgba(255,255,255,0.15); backdrop-filter:blur(10px);
                 box-shadow:0 4px 14px rgba(0,0,0,0.25); text-align:center;">
@@ -126,7 +122,7 @@ def premium_card(title, value, subtext="", icon="💠"):
             {subtext}
         </div>
     </div>
-    '''
+    """
 
 
 # ===================== RENDER PREMIUM SENTIMENT =====================
@@ -135,18 +131,18 @@ def render_crypto_sentiment(symbol: str):
     st.markdown("## 🧭 Crypto Market Sentiment (Premium)")
 
     # ---- Ambil data mentah ----
-    fear, fear_label = get_fear_greed()
+    fear_raw, fear_label = get_fear_greed()
     momentum_raw = get_coin_momentum(symbol)
     pulse_raw = get_volume_pulse(symbol)
     dominance_raw = get_btc_dominance(symbol)
 
     # ---- Normalisasi ke scalar float / None ----
-    fear = _safe_float(fear)
+    fear = _safe_float(fear_raw)
     momentum = _safe_float(momentum_raw)
     pulse = _safe_float(pulse_raw)
     dominance = _safe_float(dominance_raw)
 
-    # ---- Icon logic aman (tidak pakai objek pandas) ----
+    # ---- Icon logic aman ----
     if fear is None:
         mood_icon = "⚪️"
     elif fear > 55:
@@ -196,7 +192,7 @@ def render_crypto_sentiment(symbol: str):
             "Bullish" if (momentum is not None and momentum > 0) else "Bearish", col
         )
         st.markdown(
-            premium_card(f"{symbol} Momentum (7d)", val, subtext=sub, icon=mog_icon := mom_icon),
+            premium_card(f"{symbol} Momentum (7d)", val, subtext=sub, icon=mom_icon),
             unsafe_allow_html=True,
         )
 
