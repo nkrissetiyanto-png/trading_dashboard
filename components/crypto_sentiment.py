@@ -94,7 +94,6 @@ def get_btc_dominance(symbol: str):
 # ===================== UI COMPONENTS =====================
 
 def badge(text, color):
-    # HANYA span, tidak ada </div> apapun di sini
     return f"""
     <span style="
         background-color:{color};
@@ -103,15 +102,12 @@ def badge(text, color):
         color:white;
         font-size:12px;
         font-weight:600;
-        display:inline-block;
-        margin-top:4px;">
+        display:inline-block;">
         {text}
     </span>
     """
 
-
 def premium_card(title, value, sub_html="", icon="💠"):
-    # sub_html boleh kosong atau berisi HTML (misal badge)
     return f"""
     <div style="
         padding:18px;
@@ -120,19 +116,19 @@ def premium_card(title, value, sub_html="", icon="💠"):
         border:1px solid rgba(255,255,255,0.15);
         backdrop-filter:blur(10px);
         box-shadow:0 4px 14px rgba(0,0,0,0.25);
-        text-align:center;">
-        <div style="font-size:15px; color:#DFE6F0; font-weight:600; margin-bottom:6px;">
+        text-align:center;
+    ">
+        <p style="font-size:15px; color:#DFE6F0; font-weight:600; margin-bottom:6px;">
             {icon} {title}
-        </div>
-        <div style="font-size:32px; font-weight:700; color:white; margin-top:-4px;">
+        </p>
+        <p style="font-size:32px; font-weight:700; color:white; margin-top:-4px;">
             {value}
-        </div>
+        </p>
         <div style="font-size:13px; color:#AAB4C2; margin-top:8px;">
             {sub_html}
         </div>
     </div>
     """
-
 
 # ===================== RENDER PREMIUM SENTIMENT =====================
 
