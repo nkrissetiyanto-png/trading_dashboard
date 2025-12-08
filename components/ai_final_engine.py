@@ -21,6 +21,7 @@ def normalize_ohlcv(df):
 
 
 def final_decision_engine(df, trend_result, sensitivity=1.0):
+    df = normalize_ohlcv(df)
 
     reversal_signal, reversal_expl = detect_reversal(df, sensitivity)
     smart = get_smart_money_bias(df)
