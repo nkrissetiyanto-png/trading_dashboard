@@ -33,3 +33,14 @@ def render_ai_signal(df):
         st.error("Strong SELL signal")
     else:
         st.info("Market uncertain — Scalping only.")
+
+    # ============================================================
+    # ================  AI EXPLANATION SECTION ====================
+    # ============================================================
+
+    st.markdown("### 📘 AI Explanation (Why this prediction?)")
+
+    for msg in explanations:
+        st.markdown(f"- {msg}")
+
+    st.markdown("---")
