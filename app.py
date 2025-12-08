@@ -131,15 +131,14 @@ while True:
         with col1:
             render_chart(df)
             render_indicators(df)
-            st.write("=== BEFORE SMARTMONEY ===")
             render_smartmoney(df)
-            st.write("=== AFTER SMARTMONEY ===")
 
-
+            st.write("=== BEFORE SENTIMENT ===")
             if mode.startswith("Saham Indonesia"):
                 render_sentiment(symbol)
             else:
                 render_crypto_sentiment(symbol)
+            st.write("=== AFTER SENTIMENT ===")
 
             render_ai_signal(df)
             render_signals(df)
