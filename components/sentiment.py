@@ -1,16 +1,15 @@
 import streamlit as st
 import yfinance as yf
-import requests
 import numpy as np
 import pandas as pd
 
 # ============================================================
-# ===============   SAFETY HELPERS   =========================
+# SAFE UTILITIES
 # ============================================================
 
-def _safe_num(x):
+def safe_float(x):
     try:
-        x = float(str(x).replace("%","").replace("$","").strip())
+        x = float(x)
         if np.isnan(x):
             return None
         return x
@@ -19,55 +18,68 @@ def _safe_num(x):
 
 
 # ============================================================
-# ===============   MARKET / SECTOR SENTIMENT   ==============
+# 1) IHSG SENTIMENT
+# ============================================================
+
+def get_ihsg_sentiment():
+    """
+    Mengambil perubahan IHSG (1-day change %) dengan aman.
+    """
+    try:
+        df = yf.download("^JKSE", period="10d", interval="1d")
+
+        if df is None or df.empty:
+            return None
+
+        close = df["Close"].dropna()
+        if len(close) < 2:
+            return None
+
+        last = safe_float(close.iloc[-1])
+        prev = safe_float(close.iloc[-2])
+
+        if last is None or prev is None or prev == 0:
+            return None
+
+        change = (last - prev) / prev * 100
+        return round(change, 2)
+
+    except Exception:
+        return None
+
+
+# ============================================================
+# 2) SECTOR SENTIMENT
 # ============================================================
 
 SECTOR_MAP = {
-    "BBRI.JK": "Finance",
-    "BBCA.JK": "Finance",
-    "BMRI.JK": "Finance",
-    "BBNI.JK": "Finance",
-
-    "TLKM.JK": "Telco",
-    "ISAT.JK": "Telco",
-    "EXCL.JK": "Telco",
-
-    "ASII.JK": "Automotive",
-    "UNVR.JK": "Consumer",
-    "ICBP.JK": "Consumer",
-    "INDF.JK": "Consumer",
+    "Finance": ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"],
+    "Telco": ["TLKM.JK", "ISAT.JK"],
+    "Consumer": ["UNVR.JK", "ICBP.JK", "INDF.JK"],
+    "Retail": ["AMRT.JK", "MAPI.JK"],
+    "Energy": ["PGAS.JK", "MEDC.JK"],
 }
-
 
 def get_sector_sentiment(symbol):
     """
-    Menghitung sentimen sektor berbasis 3–5 saham sektor lain (proxy).
-    Anti-error bila data kosong atau gagal ambil data.
+    Hitung sentiment sektor berdasarkan saham-saham rekan satu sektor.
+    Aman walaupun data kosong.
     """
-    # Mapping sektor → saham pembanding
-    SECTOR_MAP = {
-        "Finance": ["BBRI.JK", "BBCA.JK", "BMRI.JK", "BBNI.JK"],
-        "Telco": ["TLKM.JK", "ISAT.JK"],
-        "Consumer": ["UNVR.JK", "ICBP.JK", "INDF.JK"],
-        "Retail": ["AMRT.JK", "MAPI.JK"],
-        "Energy": ["PGAS.JK", "MEDC.JK"],
-    }
-
-    # Cari sektor dari symbol
+    symbol = symbol.upper()
     sector_name = None
+
+    # cari sektor dari symbol
     for sec, syms in SECTOR_MAP.items():
-        if symbol.upper() in syms:
+        if symbol in syms:
             sector_name = sec
             break
 
     if sector_name is None:
-        return "Unknown", 50  # default neutral
-
-    reference_stocks = SECTOR_MAP[sector_name]
+        return "Unknown", 50  # netral
 
     scores = []
 
-    for s in reference_stocks:
+    for s in SECTOR_MAP[sector_name]:
         try:
             df = yf.download(s, period="7d", interval="1d")
             close = df["Close"].dropna()
@@ -75,181 +87,148 @@ def get_sector_sentiment(symbol):
             if len(close) < 2:
                 continue
 
-            change = (close.iloc[-1] - close.iloc[-2]) / close.iloc[-2] * 100
+            last = safe_float(close.iloc[-1])
+            prev = safe_float(close.iloc[-2])
+
+            if last is None or prev is None or prev == 0:
+                continue
+
+            change = (last - prev) / prev * 100
             scores.append(change)
 
-        except Exception:
+        except:
             continue
 
-    # ❗ Anti-error: Jika skor kosong → return neutral
+    # Jika semua gagal → netral
     if len(scores) == 0:
-        return sector_name, 50  # sektor netral
+        return sector_name, 50
 
-    # Jika ada skor valid
-    avg_score = float(np.mean(scores))
+    avg = float(np.mean(scores))
 
-    # Normalisasi 0–100
-    norm_score = max(0, min(round((avg_score + 5) * 10), 100))
-
-    return sector_name, norm_score
-
+    # Normalisasi → 0–100
+    score = max(0, min(round((avg + 3) * 10), 100))
+    return sector_name, score
 
 
 # ============================================================
-# ===============   ADVANCED FOREIGN FLOW (ANTI-BIAS) ========
+# 3) FOREIGN FLOW (ANTI BIAS)
 # ============================================================
 
-def get_eido_change():
-    """Primary: EIDO daily close change (anti-bias)."""
-    try:
-        df = yf.download("EIDO", period="5d", interval="1d")
-        if df.empty or len(df) < 2:
-            return None
-
-        close = df["Close"].dropna()
-        if len(close) < 2:
-            return None
-
-        last = close.iloc[-1]
-        prev = close.iloc[-2]
-        return round((last - prev) / prev * 100, 2)
-    except:
-        return None
-
-
-def get_nasdaq_eido_change():
-    """Fallback: NASDAQ API — selalu ada data meski weekend."""
-    try:
-        url = "https://api.nasdaq.com/api/quote/EIDO/info?assetclass=stocks"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        data = requests.get(url, headers=headers, timeout=5).json()
-
-        info = data.get("data", {}).get("primaryData", {})
-        last = _safe_num(info.get("lastSalePrice", ""))
-        prev = _safe_num(info.get("previousClose", ""))
-
-        if last is None or prev is None:
-            return None
-
-        return round((last - prev) / prev * 100, 2)
-    except:
-        return None
-
-
-def get_eem_change():
-    """Proxy ETF EEM (Emerging Markets ETF)."""
-    try:
-        df = yf.download("EEM", period="5d", interval="1d")
-        if df.empty or len(df) < 2:
-            return None
-        close = df["Close"].dropna()
-        last = close.iloc[-1]
-        prev = close.iloc[-2]
-        return round((last - prev) / prev * 100, 2)
-    except:
-        return None
-
-
-def get_foreign_flow_sentiment():
+def get_foreign_flow():
     """
-    FINAL Foreign Flow (Anti-bias, stable, never NaN)
-    Priority:
-    1) EIDO daily close
-    2) NASDAQ lastSalePrice
-    3) EEM proxy
-    """
+    Ambil data proxy foreign flow dari EIDO.
+    Jika kosong → fallback ke FXI (ETF Emerging Markets).
 
-    eido = get_eido_change()
+    Return dalam bentuk % perubahan harian.
+    """
+    def fetch_etf(etf_symbol):
+        try:
+            df = yf.download(etf_symbol, period="7d", interval="1d")
+            if df is None or df.empty:
+                return None
+
+            close = df["Close"].dropna()
+            if len(close) < 2:
+                return None
+
+            last = safe_float(close.iloc[-1])
+            prev = safe_float(close.iloc[-2])
+
+            if prev is None or prev == 0:
+                return None
+
+            return round((last - prev) / prev * 100, 2)
+        except:
+            return None
+
+    # 1) Coba EIDO
+    eido = fetch_etf("EIDO")
     if eido is not None:
-        return eido, "EIDO (Primary)"
+        return eido
 
-    nasdaq = get_nasdaq_eido_change()
-    if nasdaq is not None:
-        return nasdaq, "NASDAQ (Fallback)"
+    # 2) fallback ke FXI (lebih likuid)
+    fxi = fetch_etf("FXI")
+    if fxi is not None:
+        return fxi
 
-    eem = get_eem_change()
-    if eem is not None:
-        return eem, "EEM Proxy"
-
-    return None, "No Data"
+    # 3) fallback final → netral
+    return 0.0
 
 
 # ============================================================
-# ===============   IHSG SENTIMENT SECTION ===================
+# 4) MARKET MOOD SUMMARY
 # ============================================================
 
-def get_ihsg_sentiment():
-    try:
-        df = yf.download("^JKSE", period="10d", interval="1d")
-        if df is None or df.empty:
-            return None
+def interpret_sentiment(value):
+    """
+    Mengubah angka menjadi label mood.
+    """
+    if value is None:
+        return "Unknown"
 
-        close = df["Close"].dropna()
-
-        # Pastikan minimal 2 data
-        if len(close) < 2:
-            return None
-
-        last = float(close.iloc[-1])
-        prev = float(close.iloc[-2])
-
-        if prev == 0:
-            return None
-
-        chg = (last - prev) / prev * 100
-        return round(float(chg), 2)
-
-    except Exception:
-        return None
+    if value > 1:
+        return "Bullish"
+    elif value < -1:
+        return "Bearish"
+    else:
+        return "Neutral"
 
 
 # ============================================================
-# ===============   RENDER SENTIMENT UI ======================
+# 5) RENDER SENTIMENT UI
 # ============================================================
 
 def render_sentiment(symbol):
-    st.markdown("## 🧭 Market Sentiment — Indonesia")
+    st.markdown("## 📊 Indonesian Market Sentiment (Premium)")
 
-    # ---------------------------------------------------------
-    # 1. IHSG SENTIMENT
-    # ---------------------------------------------------------
+    # -------------------------------
+    # Load data
+    # -------------------------------
     ihsg = get_ihsg_sentiment()
+    sector, sector_score = get_sector_sentiment(symbol)
+    foreign = get_foreign_flow()
+
+    # -------------------------------
+    # Display IHSG
+    # -------------------------------
+    st.markdown("### 🇮🇩 IHSG Sentiment")
+
     if ihsg is None:
-        st.warning("IHSG data unavailable")
+        st.warning("IHSG data unavailable.")
     else:
-        if isinstance(ihsg, (int, float)):
-            color = "🟢" if ihsg > 0 else "🔴"
-            st.markdown(f"### {color} IHSG: {ihsg:.2f}%")
-        else:
-            st.warning("IHSG data unavailable")
+        icon = "🟢" if ihsg > 0 else "🔴"
+        st.markdown(f"**{icon} IHSG Change:** {ihsg:.2f}%")
 
-    # ---------------------------------------------------------
-    # 2. SECTOR SENTIMENT
-    # ---------------------------------------------------------
-    sector, score = get_sector_sentiment(symbol)
-    st.markdown(f"### 🏭 Sector: **{sector}** — Score: **{score}/100**")
+    # -------------------------------
+    # Display Sector
+    # -------------------------------
+    st.markdown("### 🏭 Sector Sentiment")
 
-    # ---------------------------------------------------------
-    # 3. FOREIGN FLOW SENTIMENT (ANTI-BIAS)
-    # ---------------------------------------------------------
-    eido_chg, source = get_foreign_flow_sentiment()
+    st.write(f"**Sector:** {sector}")
+    st.write(f"**Sector Score:** {sector_score:.0f}/100")
 
-    if eido_chg is None:
-        st.warning("Foreign Flow data unavailable.")
-    else:
-        color = "🟢" if eido_chg > 0 else "🔴"
-        st.markdown(f"### 🌏 Foreign Flow: {color} {eido_chg:.2f}%  — *{source}*")
+    # -------------------------------
+    # Display Foreign Flow
+    # -------------------------------
+    st.markdown("### 🌏 Foreign Flow")
 
-    # ---------------------------------------------------------
-    # 4. STOCK-SPECIFIC MOMENTUM
-    # ---------------------------------------------------------
-    try:
-        df = yf.download(symbol, period="7d", interval="1d")
-        if not df.empty and len(df) > 2:
-            close = df["Close"].dropna()
-            change = (close.iloc[-1] - close.iloc[-2]) / close.iloc[-2] * 100
-            st.markdown(f"### 📈 {symbol} Momentum: {change:.2f}%")
-    except:
-        pass
+    icon = "🟢" if foreign > 0 else "🔴" if foreign < 0 else "⚪"
+    st.write(f"**{icon} Foreign ETF Change:** {foreign:.2f}%")
+
+    # -------------------------------
+    # Final Mood Summary
+    # -------------------------------
+    st.markdown("### 🔮 Market Mood Summary")
+
+    msgs = []
+
+    if ihsg is not None:
+        msgs.append(f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%).")
+
+    msgs.append(f"Sector sentiment is **{sector_score}/100**.")
+    msgs.append(f"Foreign flow indicates **{interpret_sentiment(foreign)}** ({foreign:+.2f}%).")
+
+    for m in msgs:
+        st.markdown(f"- {m}")
 
     st.markdown("---")
