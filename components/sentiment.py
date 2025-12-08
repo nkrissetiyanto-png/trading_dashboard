@@ -191,13 +191,13 @@ def render_sentiment(symbol):
     # -------------------------------
     # Display IHSG
     # -------------------------------
-    st.markdown("### 🇮🇩 IHSG Sentiment")
+    #st.markdown("### 🇮🇩 IHSG Sentiment")
 
-    if ihsg is None:
-        st.warning("IHSG data unavailable.")
-    else:
-        icon = "🟢" if ihsg > 0 else "🔴"
-        st.markdown(f"**{icon} IHSG Change:** {ihsg:.2f}%")
+    #if ihsg is None:
+    #    st.warning("IHSG data unavailable.")
+    #else:
+    #    icon = "🟢" if ihsg > 0 else "🔴"
+    #    st.markdown(f"**{icon} IHSG Change:** {ihsg:.2f}%")
 
     # -------------------------------
     # Display Sector
@@ -232,3 +232,51 @@ def render_sentiment(symbol):
         st.markdown(f"- {m}")
 
     st.markdown("---")
+
+    # ---- Layout ----
+    c1, c2, c3, c4 = st.columns(4)
+
+    # === CARD 1: Fear & Greed ===
+    with c1:
+        #st.markdown("### 🇮🇩 IHSG Sentiment")
+        
+        if ihsg is None:
+            val = "IHSG data unavailable."
+        else:
+            icon = "🟢" if ihsg > 0 else "🔴"
+            val = f"**{icon} IHSG Change:** {ihsg:.2f}%"
+
+        html = premium_card("🇮🇩 IHSG Sentiment", val, sub_html=sub, icon=mood_icon)
+        st.markdown(html, unsafe_allow_html=True)
+
+    # === CARD 2: BTC Dominance (hanya BTC) ===
+    with c2:
+        #val = f"{dominance:.2f}%" if dominance is not None else "N/A"
+        #html = premium_card("BTC Dominance", val, "Market Strength Indicator", icon="🧲")
+        st.markdown(html, unsafe_allow_html=True)
+
+    # === CARD 3: Coin Momentum ===
+    with c3:
+        #val = f"{momentum:.2f}%" if momentum is not None else "N/A"
+        #col = "#2ecc71" if (momentum is not None and momentum > 0) else "#e74c3c"
+        #sub = badge(
+        #    "Bullish" if (momentum is not None and momentum > 0) else "Bearish",
+        #    col,
+        #)
+        #title = f"{symbol} Momentum (7d)"
+        #html = premium_card(title, val, sub_html=sub, icon=mom_icon)
+        st.markdown(html, unsafe_allow_html=True)
+
+    # === CARD 4: Volume Pulse ===
+    with c4:
+        #val = f"{pulse:.2f}%" if pulse is not None else "N/A"
+        #col = "#2ecc71" if (pulse is not None and pulse > 0) else "#e74c3c"
+        #sub = badge(
+        #    "High Liquidity"
+        #    if (pulse is not None and pulse > 0)
+        #    else "Low Liquidity",
+        #    col,
+        #)
+        #title = f"{symbol} Volume Pulse"
+        #html = premium_card(title, val, sub_html=sub, icon=pulse_icon)
+        st.markdown(html, unsafe_allow_html=True)
