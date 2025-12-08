@@ -3,56 +3,111 @@ import streamlit as st
 def render_battle_meter(score: int = 50):
     """
     score = 0–100
-    0  → Foreign Sell Heavy (dominan lokal)
-    50 → Balanced
-    100 → Foreign Buy Heavy
+    0   → Foreign heavy SELL (dominan lokal)
+    50  → Balanced
+    100 → Foreign heavy BUY
     """
+    # Clamp skor supaya selalu 0–100
+    try:
+        score = int(score)
+    except Exception:
+        score = 50
 
     score = max(0, min(score, 100))
-    width_pct = score  # 0–100
+    width_pct = score
 
-    # Label kondisi
-    if score > 65:
-        label = "🟢 Foreign Accumulating"
-    elif score < 35:
-        label = "🔴 Foreign Selling"
+    # Label status
+    if score >= 70:
+        label = "🟢 Foreign Accumulation — asing agresif beli"
+    elif score <= 30:
+        label = "🔴 Foreign Distribution — asing agresif jual"
     else:
-        label = "⚪ Balanced Flow"
+        label = "⚪ Balanced Flow — tarik menarik lokal vs asing"
 
-    st.markdown("## ⚔️ Domestic vs Foreign Battle Meter (Premium)")
+    # Side text (domestic vs foreign)
+    if score > 55:
+        side = "Kekuatan asing sedikit lebih dominan."
+    elif score < 45:
+        side = "Tekanan jual asing lebih besar, waspada koreksi."
+    else:
+        side = "Kekuatan lokal dan asing relatif seimbang."
 
-    html = f"""
-    <div style="
-        padding:20px;
-        border-radius:16px;
-        background:#0d1117;
-        border:1px solid rgba(255,255,255,0.1);
-        margin-top:10px;
-    ">
-        <div style="color:#e5e7eb; font-size:15px; margin-bottom:10px;">
-            Foreign Strength Meter
-        </div>
-
-        <div style="
+    # ==== CSS PREMIUM (ANIMATED + GLOW) ====
+    st.markdown(
+        """
+        <style>
+        .df-card {
+            padding:18px 22px;
+            border-radius:18px;
+            background:radial-gradient(circle at top, #111827 0, #020617 55%);
+            border:1px solid rgba(148,163,184,0.35);
+            box-shadow:0 0 0 1px rgba(15,23,42,0.8), 0 18px 45px rgba(0,0,0,0.75);
+            margin-top:10px;
+        }
+        .df-title {
+            font-size:15px;
+            font-weight:600;
+            color:#e5e7eb;
+            margin-bottom:10px;
+        }
+        .df-bar-outer {
             width:100%;
             height:18px;
             border-radius:999px;
-            background:#111827;
+            background:linear-gradient(90deg,#020617,#020617);
             overflow:hidden;
-            border:1px solid rgba(55,65,81,0.9);
+            border:1px solid rgba(51,65,85,0.9);
             position:relative;
-        ">
-            <div style="
-                width:{width_pct}%;
-                height:100%;
-                background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);
-                transition:width 0.4s ease-out;
-            "></div>
+        }
+        .df-bar-inner {
+            height:100%;
+            border-radius:999px;
+            background:linear-gradient(90deg,#ef4444,#f97316,#eab308,#22c55e);
+            box-shadow:0 0 18px rgba(34,197,94,0.6);
+            animation:dfGlow 2.4s ease-in-out infinite;
+            transform-origin:left center;
+        }
+        @keyframes dfGlow {
+            0%   { box-shadow:0 0 10px rgba(34,197,94,0.35); }
+            50%  { box-shadow:0 0 26px rgba(34,197,94,0.95); }
+            100% { box-shadow:0 0 10px rgba(34,197,94,0.35); }
+        }
+        .df-footer {
+            margin-top:10px;
+            font-size:13px;
+            color:#d1d5db;
+        }
+        .df-footer span.df-score {
+            font-weight:700;
+            color:#facc15;
+        }
+        .df-sub {
+            font-size:12px;
+            color:#9ca3af;
+            margin-top:4px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ==== HTML KOMPONEN ====
+    html = f"""
+    <div class="df-card">
+        <div class="df-title">
+            ⚔️ Domestic vs Foreign Battle Meter (Premium)
         </div>
 
-        <div style="margin-top:10px; color:#d1d5db; font-size:13px;">
-            Score: <b>{score}/100</b><br>
+        <div class="df-bar-outer">
+            <div class="df-bar-inner" style="width:{width_pct}%;"></div>
+        </div>
+
+        <div class="df-footer">
+            Score: <span class="df-score">{score}/100</span><br/>
             {label}
+            <div class="df-sub">
+                {side}
+            </div>
         </div>
     </div>
     """
