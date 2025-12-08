@@ -276,4 +276,21 @@ def render_sentiment(symbol):
         html = premium_card("🌏 Foreign Flow", f"{foreign:.2f}%", sub, icon)
         st.markdown(html, unsafe_allow_html=True)
 
-    # === CARD 4: Volume Pulse ===
+    
+    # -------------------------------
+    # Final Mood Summary
+    # -------------------------------
+    st.subheader("🔮 Market Mood Summary")
+
+    msgs = []
+
+    if ihsg is not None:
+        msgs.append(f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%).")
+
+    msgs.append(f"Sector sentiment is **{sector_score}/100**.")
+    msgs.append(f"Foreign flow indicates **{interpret_sentiment(foreign)}** ({foreign:+.2f}%).")
+
+    for m in msgs:
+        st.markdown(f"- {m}")
+
+    st.markdown("---")
