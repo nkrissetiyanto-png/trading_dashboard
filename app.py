@@ -12,7 +12,7 @@ from components.ai_signal import render_ai_signal
 from data.data_loader import load_candles
 from components.ai_confidence_chart import render_ai_confidence_chart
 from components.ai_reversal import render_ai_reversal
-
+from components.reversal_detector import render_reversal_detector
 
 # ======================================================
 # PAGE CONFIG
@@ -146,7 +146,8 @@ while True:
             else:
                 render_crypto_sentiment(symbol)
                 render_ai_signal(df)
-                render_ai_reversal(df)
+                #render_ai_reversal(df)
+                render_reversal_detector(df, reversal_sensitivity)
                 render_ai_confidence_chart()
 
             render_signals(df)
