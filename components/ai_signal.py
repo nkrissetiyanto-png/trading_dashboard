@@ -16,7 +16,8 @@ def render_ai_signal(df):
     prob_up = result["prob_up"]
     prob_down = result["prob_down"]
     conf = result["confidence"]
-
+    explanations = result.get("explanations", [])
+    
     color = "🟢" if direction == "UP" else "🔴"
 
     st.markdown(f"""
