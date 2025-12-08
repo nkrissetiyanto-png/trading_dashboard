@@ -278,14 +278,28 @@ def render_sentiment(symbol):
 
     # === CARD 4: Volume Pulse ===
     with c4:
-        #val = f"{pulse:.2f}%" if pulse is not None else "N/A"
-        #col = "#2ecc71" if (pulse is not None and pulse > 0) else "#e74c3c"
-        #sub = badge(
-        #    "High Liquidity"
-        #    if (pulse is not None and pulse > 0)
-        #    else "Low Liquidity",
-        #    col,
-        #)
+        # -------------------------------
+        # Final Mood Summary
+        # -------------------------------
+        st.markdown("### y")
+    
+        msgs = []
+    
+        if ihsg is not None:
+            msgs.append(f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%).")
+    
+        msgs.append(f"Sector sentiment is **{sector_score}/100**.")
+        msgs.append(f"Foreign flow indicates **{interpret_sentiment(foreign)}** ({foreign:+.2f}%).")
+    
+        for m in msgs:
+            st.markdown(f"- {m}")
+    
+        st.markdown("---")
+        col = "#2ecc71" if foreign > 0 else "#e74c3c"
+        sub = badge(
+            f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%)."
+            col,
+        )
         #title = f"{symbol} Volume Pulse"
-        #html = premium_card(title, val, sub_html=sub, icon=pulse_icon)
+        html = premium_card("🔮 Market Mood Summary", msgs, sub_html=sub, icon=pulse_icon)
         st.markdown(html, unsafe_allow_html=True)
