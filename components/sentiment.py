@@ -235,7 +235,7 @@ def render_sentiment(symbol):
     #st.write(f"**Sector Score:** {sector_score:.0f}/100")
 
     # ---- Layout ----
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3 = st.columns(3)
 
     # === CARD 1: Fear & Greed ===
     with c1:
@@ -277,26 +277,3 @@ def render_sentiment(symbol):
         st.markdown(html, unsafe_allow_html=True)
 
     # === CARD 4: Volume Pulse ===
-    with c4:
-        # -------------------------------
-        # Final Mood Summary
-        # -------------------------------
-        msgs = []
-    
-        if ihsg is not None:
-            msgs.append(f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%).")
-    
-        msgs.append(f"Sector sentiment is **{sector_score}/100**.")
-        msgs.append(f"Foreign flow indicates **{interpret_sentiment(foreign)}** ({foreign:+.2f}%).")
-    
-        #for m in msgs:
-        #    st.markdown(f"- {m}")
-    
-        col = "#2ecc71" if foreign > 0 else "#e74c3c"
-        sub = badge(
-            f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%).",
-            col,
-        )
-        #title = f"{symbol} Volume Pulse"
-        html = premium_card("🔮 Market Mood Summary", msgs, sub_html=sub, icon="")
-        st.markdown(html, unsafe_allow_html=True)
