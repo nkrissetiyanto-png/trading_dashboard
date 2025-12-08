@@ -94,6 +94,7 @@ def get_btc_dominance(symbol: str):
 # ===================== UI COMPONENTS =====================
 
 def badge(text, color):
+    # HANYA span, tidak ada </div> apapun di sini
     return f"""
     <span style="
         background-color:{color};
@@ -101,17 +102,25 @@ def badge(text, color):
         border-radius:8px;
         color:white;
         font-size:12px;
-        font-weight:600;">
+        font-weight:600;
+        display:inline-block;
+        margin-top:4px;">
         {text}
     </span>
     """
 
 
-def premium_card(title, value, subtext="", icon="💠"):
+def premium_card(title, value, sub_html="", icon="💠"):
+    # sub_html boleh kosong atau berisi HTML (misal badge)
     return f"""
-    <div style="padding:18px; border-radius:18px; background:rgba(255,255,255,0.05);
-                border:1px solid rgba(255,255,255,0.15); backdrop-filter:blur(10px);
-                box-shadow:0 4px 14px rgba(0,0,0,0.25); text-align:center;">
+    <div style="
+        padding:18px;
+        border-radius:18px;
+        background:rgba(255,255,255,0.05);
+        border:1px solid rgba(255,255,255,0.15);
+        backdrop-filter:blur(10px);
+        box-shadow:0 4px 14px rgba(0,0,0,0.25);
+        text-align:center;">
         <div style="font-size:15px; color:#DFE6F0; font-weight:600; margin-bottom:6px;">
             {icon} {title}
         </div>
@@ -119,7 +128,7 @@ def premium_card(title, value, subtext="", icon="💠"):
             {value}
         </div>
         <div style="font-size:13px; color:#AAB4C2; margin-top:8px;">
-            {subtext}
+            {sub_html}
         </div>
     </div>
     """
@@ -170,31 +179,28 @@ def render_crypto_sentiment(symbol: str):
                 col = "#c0392b"
         else:
             col = "#7f8c8d"
+
         sub = badge(fear_label or "Unknown", col)
-        st.markdown(
-            premium_card("Fear & Greed Index", val, subtext=sub, icon=mood_icon),
-            unsafe_allow_html=True,
-        )
+        html = premium_card("Fear & Greed Index", val, sub_html=sub, icon=mood_icon)
+        st.markdown(html, unsafe_allow_html=True)
 
     # === CARD 2: BTC Dominance (hanya BTC) ===
     with c2:
         val = f"{dominance:.2f}%" if dominance is not None else "N/A"
-        st.markdown(
-            premium_card("BTC Dominance", val, "Market Strength Indicator", icon="🧲"),
-            unsafe_allow_html=True,
-        )
+        html = premium_card("BTC Dominance", val, "Market Strength Indicator", icon="🧲")
+        st.markdown(html, unsafe_allow_html=True)
 
     # === CARD 3: Coin Momentum ===
     with c3:
         val = f"{momentum:.2f}%" if momentum is not None else "N/A"
         col = "#2ecc71" if (momentum is not None and momentum > 0) else "#e74c3c"
         sub = badge(
-            "Bullish" if (momentum is not None and momentum > 0) else "Bearish", col
+            "Bullish" if (momentum is not None and momentum > 0) else "Bearish",
+            col,
         )
-        st.markdown(
-            premium_card(f"{symbol} Momentum (7d)", val, subtext=sub, icon=mom_icon),
-            unsafe_allow_html=True,
-        )
+        title = f"{symbol} Momentum (7d)"
+        html = premium_card(title, val, sub_html=sub, icon=mom_icon)
+        st.markdown(html, unsafe_allow_html=True)
 
     # === CARD 4: Volume Pulse ===
     with c4:
@@ -206,7 +212,6 @@ def render_crypto_sentiment(symbol: str):
             else "Low Liquidity",
             col,
         )
-        st.markdown(
-            premium_card(f"{symbol} Volume Pulse", val, subtext=sub, icon=pulse_icon),
-            unsafe_allow_html=True,
-        )
+        title = f"{symbol} Volume Pulse"
+        html = premium_card(title, val, sub_html=sub, icon=pulse_icon)
+        st.markdown(html, unsafe_allow_html=True)
