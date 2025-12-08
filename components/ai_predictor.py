@@ -3,27 +3,29 @@ import pandas as pd
 
 class AIPredictor:
     """
-    Simple rule-based AI (tanpa sklearn, tanpa .pkl).
-    Otomatis deteksi nama kolom open/high/low/close/volume (case-insensitive).
+    Rule-based AI + Explanation
+    Menggunakan 4 fitur:
+    1. Return 1 candle
+    2. Momentum 5 candle
+    3. Volume momentum
+    4. Candle body strength
     """
 
     def __init__(self):
         pass
 
-    # ---------- Utility: normalisasi nama kolom ----------
+    # -----------------------------
+    # Normalisasi kolom OHLCV
+    # -----------------------------
     def _normalize_ohlcv(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        Mencari kolom OHLCV dengan nama bervariasi (open / Open / close / price / dll),
-        lalu merename ke standar: Open, High, Low, Close, Volume.
-        """
         df = df.copy()
         col_map = {}
 
         candidates = {
-            "Open":   ["open", "o"],
-            "High":   ["high", "h"],
-            "Low":    ["low", "l"],
-            "Close":  ["close", "c", "price", "last"],
+            "Open": ["open", "o"],
+            "High": ["high", "h"],
+            "Low": ["low", "l"],
+            "Close": ["close", "c", "price", "last"],
             "Volume": ["volume", "vol", "qty"],
         }
 
@@ -37,64 +39,61 @@ class AIPredictor:
 
         missing = [c for c in ["Open", "High", "Low", "Close", "Volume"] if c not in col_map]
         if missing:
-            # Kalau benar-benar tidak ketemu, lempar error supaya bisa di-handle di predict()
-            raise KeyError(f"Missing OHLCV columns: {missing}. Available: {list(df.columns)}")
+            raise KeyError(f"Missing OHLCV: {missing}")
 
-        # Rename ke standar
         df = df.rename(columns={orig: std for std, orig in col_map.items()})
 
-        # Pastikan numeric
-        for col in ["Open", "High", "Low", "Close", "Volume"]:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+        for c in ["Open", "High", "Low", "Close", "Volume"]:
+            df[c] = pd.to_numeric(df[c], errors="coerce")
 
-        df = df.dropna(subset=["Open", "Close"])
-        return df
+        return df.dropna()
 
-    def _explain(self, row):
-        msgs = []
+    # -----------------------------
+    # Feature Explanation (array-based)
+    # -----------------------------
+    def _explain_feats(self, feats):
+        ret_1, mom_5, vol_mom, body = feats
 
-        # 1. Price Return (momentum)
-        if row["return"] > 0:
-            msgs.append("📈 Harga menunjukkan momentum positif (return naik).")
+        expl = []
+
+        # 1. Return
+        if ret_1 > 0:
+            expl.append("📈 Return candle terakhir positif.")
         else:
-            msgs.append("📉 Harga memiliki momentum negatif (return turun).")
+            expl.append("📉 Return candle terakhir negatif.")
 
-        # 2. MACD
-        if row["macd"] > row["signal"]:
-            msgs.append("💹 MACD berada di atas garis signal → tekanan bullish.")
+        # 2. Momentum 5 candle
+        if mom_5 > 0:
+            expl.append("🚀 Momentum 5 candle terakhir bullish.")
         else:
-            msgs.append("📉 MACD berada di bawah garis signal → tekanan bearish.")
+            expl.append("🔻 Momentum 5 candle terakhir bearish.")
 
-        # 3. RSI
-        if row["rsi"] < 30:
-            msgs.append("🟢 RSI berada pada area oversold → potensi reversal naik.")
-        elif row["rsi"] > 70:
-            msgs.append("🔴 RSI berada pada area overbought → risiko koreksi turun.")
+        # 3. Volume
+        if vol_mom > 0:
+            expl.append("📊 Volume berada di atas rata-rata (market aktif).")
         else:
-            msgs.append("⚪ RSI berada di area netral → tidak ada ekstrem.")
+            expl.append("💤 Volume di bawah rata-rata (market lemah).")
 
-        # 4. Volume Strength
-        if row["vol_change"] > 0:
-            msgs.append("📊 Volume meningkat → minat pasar bertambah.")
+        # 4. Body strength
+        if body > 0:
+            expl.append("💚 Candle body bullish (close > open).")
         else:
-            msgs.append("🔻 Volume menurun → minat pasar melemah.")
+            expl.append("❤️ Candle body bearish (close < open).")
 
-        return msgs
-        
-    # ---------- Feature extraction ----------
-    def _extract_features(self, df: pd.DataFrame) -> np.ndarray:
+        return expl
+
+    # -----------------------------
+    # Feature extraction
+    # -----------------------------
+    def _extract_features(self, df: pd.DataFrame):
         df = self._normalize_ohlcv(df)
-
-        if len(df) < 2:
-            return np.array([0.0, 0.0, 0.0, 0.0])
 
         close = df["Close"].values
         volume = df["Volume"].values
         open_ = df["Open"].values
-
         last = len(df) - 1
 
-        # Return 1 candle terakhir
+        # Return 1 candle
         if last >= 1 and close[last - 1] != 0:
             ret_1 = (close[last] - close[last - 1]) / close[last - 1] * 100
         else:
@@ -106,59 +105,38 @@ class AIPredictor:
         else:
             mom_5 = ret_1
 
-        # Volume momentum (dibanding rata-rata 20 candle terakhir)
+        # Volume momentum
         start_idx = max(0, last - 20)
-        base_vol = np.nanmean(volume[start_idx:last + 1])
-        if base_vol and not np.isnan(base_vol):
-            vol_mom = (volume[last] - base_vol) / base_vol * 100
-        else:
-            vol_mom = 0.0
+        base_vol = np.nanmean(volume[start_idx:last+1])
+        vol_mom = ((volume[last] - base_vol) / base_vol * 100) if base_vol else 0.0
 
-        # Candle body strength
-        if open_[last] != 0:
-            body = (close[last] - open_[last]) / open_[last] * 100
-        else:
-            body = 0.0
+        # Candle body
+        body = (close[last] - open_[last]) / open_[last] * 100 if open_[last] else 0.0
 
         return np.array([ret_1, mom_5, vol_mom, body])
 
-    # ---------- Main predict ----------
-    def predict(self, df: pd.DataFrame):
-        # Minimal data supaya indikator ada konteks
+    # -----------------------------
+    # Main prediction
+    # -----------------------------
+    def predict(self, df):
         if df is None or len(df) < 5:
             return {
                 "direction": "N/A",
-                "prob_up": 0.0,
-                "prob_down": 0.0,
-                "confidence": 0.0,
+                "prob_up": 0,
+                "prob_down": 0,
+                "confidence": 0,
+                "explanations": ["❗ Data terlalu sedikit untuk AI analisis."]
             }
 
-        try:
-            feats = self._extract_features(df)
-        except Exception as e:
-            # Log di console Streamlit, tapi jangan bikin app crash
-            print("AI feature error:", e)
-            return {
-                "direction": "N/A",
-                "prob_up": 0.0,
-                "prob_down": 0.0,
-                "confidence": 0.0,
-            }
+        # Extract features
+        feats = self._extract_features(df)
 
-        # Scoring sederhana: berapa banyak fitur yang bullish (>0)
-        score = 0
-        total = 4
+        # Explanation (based on features)
+        explanations = self._explain_feats(feats)
 
-        if feats[0] > 0:  # return 1 candle
-            score += 1
-        if feats[1] > 0:  # momentum 5 candle
-            score += 1
-        if feats[2] > 0:  # volume momentum
-            score += 1
-        if feats[3] > 0:  # body strength
-            score += 1
-
-        prob_up = score / total
+        # Score
+        score = sum(1 for x in feats if x > 0)
+        prob_up = score / 4
         prob_down = 1 - prob_up
         direction = "UP" if prob_up >= 0.5 else "DOWN"
         confidence = abs(prob_up - prob_down)
