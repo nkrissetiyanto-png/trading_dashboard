@@ -226,7 +226,13 @@ def render_sentiment(symbol):
     #    icon = "🟢" if ihsg > 0 else "🔴"
     #    st.markdown(f"**{icon} IHSG Change:** {ihsg:.2f}%")
 
+    # -------------------------------
+    #st.write Sector
+    # -------------------------------
+    #st.markdown("### 🏭 Sector Sentiment")
 
+    #st.write(f"**Sector:** {sector}")
+    #st.write(f"**Sector Score:** {sector_score:.0f}/100")
 
     # ---- Layout ----
     c1, c2, c3, c4 = st.columns(4)
@@ -246,8 +252,7 @@ def render_sentiment(symbol):
 
     # === CARD 2: BTC Dominance (hanya BTC) ===
     with c2:
-        #val = f"{dominance:.2f}%" if dominance is not None else "N/A"
-        #html = premium_card("BTC Dominance", val, "Market Strength Indicator", icon="🧲")
+        html = premium_card("🏭 Sector Sentiment", f"{sector_score:.0f}/100", f"**Sector:** {sector}", icon="")
         st.markdown(html, unsafe_allow_html=True)
 
     # === CARD 3: Coin Momentum ===
