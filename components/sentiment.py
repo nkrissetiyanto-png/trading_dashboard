@@ -281,8 +281,6 @@ def render_sentiment(symbol):
         # -------------------------------
         # Final Mood Summary
         # -------------------------------
-        st.markdown("### y")
-    
         msgs = []
     
         if ihsg is not None:
@@ -291,10 +289,9 @@ def render_sentiment(symbol):
         msgs.append(f"Sector sentiment is **{sector_score}/100**.")
         msgs.append(f"Foreign flow indicates **{interpret_sentiment(foreign)}** ({foreign:+.2f}%).")
     
-        for m in msgs:
-            st.markdown(f"- {m}")
+        #for m in msgs:
+        #    st.markdown(f"- {m}")
     
-        st.markdown("---")
         col = "#2ecc71" if foreign > 0 else "#e74c3c"
         sub = badge(
             f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%)."
