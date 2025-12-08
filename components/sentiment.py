@@ -93,59 +93,50 @@ def get_stock_sentiment(symbol):
 # ============================================================
 #  🔷 Fungsi Sentimen Sektor
 # ============================================================
-
 def get_sector_sentiment(symbol):
-    sector = SECTOR_MAP.get(symbol)
-    if sector is None:
-        return None, None
+    """
+    Return sektor + skor sentimen (0—100).
+    """
+    try:
+        # Mapping sektor
+        sector_map = {
+            "BBRI.JK": "Finance",
+            "BBNI.JK": "Finance",
+            "BMRI.JK": "Finance",
+            "BBCA.JK": "Finance",
+            "ASII.JK": "Automotive",
+            "UNVR.JK": "Consumer",
+            "ICBP.JK": "Consumer",
+            "TLKM.JK": "Telecommunication",
+            "ISAT.JK": "Telecommunication",
+            "GGRM.JK": "Tobacco",
+            "HMSP.JK": "Tobacco",
+        }
 
-    tickers = SECTOR_COMPONENTS.get(sector, [])
-    if not tickers:
-        return sector, None
+        sector_name = sector_map.get(symbol.upper(), "General")
 
-    changes = []
+        # Ambil data sektor terkait → jika gagal, score None
+        ticker = f"{symbol}"
+        df = yf.download(ticker, period="5d", interval="1d")
 
-    for t in tickers:
-        df = yf.download(t, period="5d", interval="1d")
         if df.empty:
-            continue
+            return sector_name, None
 
-        df = df.reset_index()
-        if len(df) < 2:
-            continue
+        change = (df["Close"].iloc[-1] - df["Close"].iloc[0]) / df["Close"].iloc[0] * 100
+        score = 50 + change   # normalisasi sederhana
 
-        # --- HANDLE CLOSE YANG AJAIB (Series/DataFrame/MultiIndex) ---
-        close_col = df["Close"]
+        # Jika score gagal dihitung
+        if score is None or np.isnan(score):
+            return sector_name, None
 
-        # Kalau "Close" ternyata DataFrame (MultiIndex), ambil kolom pertamanya
-        if isinstance(close_col, pd.DataFrame):
-            close = close_col.iloc[:, 0]
-        else:
-            close = close_col
+        # Clamp 0-100
+        score = max(0, min(round(float(score)), 100))
 
-        try:
-            prev = float(close.iloc[-2])
-            last = float(close.iloc[-1])
-        except Exception:
-            # Kalau tetap bermasalah, skip ticker ini
-            continue
+        return sector_name, score
 
-        if prev <= 0:
-            continue
-
-        pct = (last - prev) / prev * 100
-        changes.append(pct)
-
-    if len(changes) == 0:
-        return sector, None
-
-    avg_change = sum(changes) / len(changes)
-
-    # Convert ke score 0–100
-    score = (avg_change + 5) * 10
-    score = max(0, min(round(score), 100))
-
-    return sector, score
+    except Exception as e:
+        print("Sector sentiment error:", e)
+        return "General", None
 
 # ============================================================
 #  🔷 Fungsi IHSG Index Sentiment
