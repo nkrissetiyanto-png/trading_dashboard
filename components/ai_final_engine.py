@@ -1,11 +1,12 @@
 from components.ai_reversal import detect_reversal
-from components.smartmoney import compute_smart_money
+from components.smartmoney import get_smart_money_bias
 
 def final_decision_engine(df, trend_result, sensitivity=1.0):
 
     reversal_signal, reversal_expl = detect_reversal(df, sensitivity)
-    smart = compute_smart_money(df)
+    smart = get_smart_money_bias(df)
 
+    
     trend_dir = trend_result["direction"]
     conf = trend_result["confidence"]
 
