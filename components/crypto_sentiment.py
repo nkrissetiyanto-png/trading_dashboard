@@ -123,7 +123,7 @@ def premium_card(title, value, sub_html="", icon="💠"):
 # ===================== RENDER PREMIUM SENTIMENT =====================
 
 def render_crypto_sentiment(symbol: str):
-    st.markdown("## 🧭 Crypto Market Sentiment (Premium)")
+    st.subheader("🧭 Crypto Market Sentiment (Premium)")
 
     # ---- Ambil data mentah ----
     fear_raw, fear_label = get_fear_greed()
