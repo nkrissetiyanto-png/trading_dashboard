@@ -139,9 +139,9 @@ while True:
         col1, col2 = st.columns([3, 1])
 
         with col1:
+            render_smartmoney(df)
             render_chart(df)
             render_indicators(df)
-            render_smartmoney(df)
 
             if mode.startswith("Saham Indonesia"):
                 render_sentiment(symbol)
