@@ -11,7 +11,7 @@ from components.crypto_sentiment import render_crypto_sentiment
 from components.ai_signal import render_ai_signal
 from data.data_loader import load_candles
 from components.ai_confidence_chart import render_ai_confidence_chart
-#from components.ai_reversal import render_ai_reversal
+from components.ai_final_engine import final_decision_engine
 from components.reversal_detector import render_reversal_detector
 
 # ======================================================
@@ -146,7 +146,20 @@ while True:
             else:
                 render_crypto_sentiment(symbol)
                 render_ai_signal(df)
-                #render_ai_reversal(df)
+                
+                trend_result = ai.predict(df)
+                decision, reason, reversal_sig, smart_money = final_decision_engine(df, trend_result)
+                
+                st.markdown("## 🧠 AI Final Decision Engine")
+                
+                color = "🟢" if decision in ["BUY", "REVERSAL BUY"] else ("🔴" if decision in ["SELL", "TAKE PROFIT"] else "⚪")
+                
+                st.markdown(f"### {color} Final Decision: **{decision}**")
+                
+                st.markdown("### Reasoning:")
+                for r in reason:
+                    st.markdown(f"- {r}")
+
                 render_reversal_detector(df, reversal_sensitivity)
                 render_ai_confidence_chart()
 
