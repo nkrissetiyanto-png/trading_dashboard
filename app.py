@@ -136,7 +136,7 @@ while True:
             if mode.startswith("Saham Indonesia"):
                 render_sentiment(symbol)
             else:
-                render_crypto_sentiment()
+                render_crypto_sentiment(symbol)
 
             render_ai_signal(df)
             render_signals(df)
