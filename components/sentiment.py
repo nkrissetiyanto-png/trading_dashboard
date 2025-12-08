@@ -162,13 +162,26 @@ def get_foreign_flow_sentiment():
 
 def get_ihsg_sentiment():
     try:
-        df = yf.download("^JKSE", period="7d", interval="1d")
-        if df.empty or len(df) < 2:
+        df = yf.download("^JKSE", period="10d", interval="1d")
+        if df is None or df.empty:
             return None
+
         close = df["Close"].dropna()
-        chg = (close.iloc[-1] - close.iloc[-2]) / close.iloc[-2] * 100
-        return round(chg, 2)
-    except:
+
+        # Pastikan minimal 2 data
+        if len(close) < 2:
+            return None
+
+        last = float(close.iloc[-1])
+        prev = float(close.iloc[-2])
+
+        if prev == 0:
+            return None
+
+        chg = (last - prev) / prev * 100
+        return round(float(chg), 2)
+
+    except Exception:
         return None
 
 
@@ -186,8 +199,11 @@ def render_sentiment(symbol):
     if ihsg is None:
         st.warning("IHSG data unavailable")
     else:
-        color = "🟢" if ihsg > 0 else "🔴"
-        st.markdown(f"### {color} IHSG: {ihsg:.2f}%")
+        if isinstance(ihsg, (int, float)):
+            color = "🟢" if ihsg > 0 else "🔴"
+            st.markdown(f"### {color} IHSG: {ihsg:.2f}%")
+        else:
+            st.warning("IHSG data unavailable")
 
     # ---------------------------------------------------------
     # 2. SECTOR SENTIMENT
