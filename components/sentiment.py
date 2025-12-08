@@ -257,14 +257,19 @@ def render_sentiment(symbol):
 
     # === CARD 3: Coin Momentum ===
     with c3:
+        # -------------------------------
+        # Display Foreign Flow
+        # -------------------------------
+        icon = "🟢" if foreign > 0 else "🔴" if foreign < 0 else "⚪"
+
         #val = f"{momentum:.2f}%" if momentum is not None else "N/A"
-        #col = "#2ecc71" if (momentum is not None and momentum > 0) else "#e74c3c"
-        #sub = badge(
-        #    "Bullish" if (momentum is not None and momentum > 0) else "Bearish",
-        #    col,
-        #)
+        col = "#2ecc71" #if (momentum is not None and momentum > 0) else "#e74c3c"
+        sub = badge(
+            f"**{icon} Foreign ETF Change:** {foreign:.2f}%",
+            col,
+        )
         #title = f"{symbol} Momentum (7d)"
-        #html = premium_card(title, val, sub_html=sub, icon=mom_icon)
+        html = premium_card("🌏 Foreign Flow", f"{foreign:.2f}%", sub_html=sub, icon)
         st.markdown(html, unsafe_allow_html=True)
 
     # === CARD 4: Volume Pulse ===
