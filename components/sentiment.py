@@ -268,7 +268,7 @@ def render_sentiment(symbol):
             col,
         )
         #title = f"{symbol} Momentum (7d)"
-        html = premium_card("🌏 Foreign Flow", f"{foreign:.2f}%", sub_html=sub, icon)
+        html = premium_card("🌏 Foreign Flow", f"{foreign:.2f}%", sub, icon)
         st.markdown(html, unsafe_allow_html=True)
 
     # === CARD 4: Volume Pulse ===
