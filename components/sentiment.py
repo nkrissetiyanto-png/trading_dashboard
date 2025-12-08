@@ -294,7 +294,7 @@ def render_sentiment(symbol):
     
         col = "#2ecc71" if foreign > 0 else "#e74c3c"
         sub = badge(
-            f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%)."
+            f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%).",
             col,
         )
         #title = f"{symbol} Volume Pulse"
