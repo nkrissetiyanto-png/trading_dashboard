@@ -179,7 +179,7 @@ def interpret_sentiment(value):
 # ============================================================
 
 def render_sentiment(symbol):
-    st.markdown("## 📊 Indonesian Market Sentiment (Premium)")
+    st.subheader("## 📊 Indonesian Market Sentiment (Premium)")
 
     # -------------------------------
     # Load data
