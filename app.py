@@ -13,6 +13,7 @@ from data.data_loader import load_candles
 from components.ai_confidence_chart import render_ai_confidence_chart
 from components.ai_final_engine import final_decision_engine
 from components.reversal_detector import render_reversal_detector
+from components.ai_predictor import AIPredictor
 
 # ======================================================
 # PAGE CONFIG
@@ -60,6 +61,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+ai = AIPredictor()
 
 def premium_loading():
     """Overlay loading premium."""
