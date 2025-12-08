@@ -124,8 +124,9 @@ def render_crypto_sentiment(symbol):
 
     # Icons
     mood_icon = "🟢" if fear and fear > 55 else "🟡" if fear and fear > 25 else "🔴"
-    mom_icon = "↗" if momentum and momentum > 0 else "↘"
-    pulse_icon = "↗" if pulse and pulse > 0 else "↘"
+    mom_icon = "↗" if (momentum is not None and momentum > 0) else "↘"
+    pulse_icon = "↗" if (pulse is not None and pulse > 0) else "↘"
+
 
     # Layout
     c1, c2, c3, c4 = st.columns(4)
@@ -154,8 +155,8 @@ def render_crypto_sentiment(symbol):
     # Volume Pulse
     with c4:
         val = f"{pulse:.2f}%" if pulse is not None else "N/A"
-        color = "#2ecc71" if pulse and pulse > 0 else "#e74c3c"
-        sub = badge("High Liquidity" if pulse and pulse > 0 else "Low Liquidity", color)
+        color = "#2ecc71" if (pulse is not None and pulse > 0) else "#e74c3c"
+        sub = badge("High Liquidity" if (pulse is not None and pulse > 0) else "Low Liquidity", color)
         st.markdown(premium_card(f"{symbol} Volume Pulse", val, subtext=sub, icon=pulse_icon),
                     unsafe_allow_html=True)
 
