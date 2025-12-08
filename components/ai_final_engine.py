@@ -1,11 +1,29 @@
 from components.ai_reversal import detect_reversal
 from components.smartmoney import get_smart_money_bias
 
+def normalize_ohlcv(df):
+    df = df.copy()
+    mapping = {
+        "open": "Open",
+        "high": "High",
+        "low": "Low",
+        "close": "Close",
+        "volume": "Volume",
+    }
+
+    lower = {c.lower(): c for c in df.columns}
+
+    for std, raw in mapping.items():
+        if std in lower:
+            df[mapping[std]] = df[lower[std]]
+
+    return df
+
+
 def final_decision_engine(df, trend_result, sensitivity=1.0):
 
     reversal_signal, reversal_expl = detect_reversal(df, sensitivity)
     smart = get_smart_money_bias(df)
-
     
     trend_dir = trend_result["direction"]
     conf = trend_result["confidence"]
