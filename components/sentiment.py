@@ -262,7 +262,6 @@ def render_sentiment(symbol):
         # -------------------------------
         icon = "🟢" if foreign > 0 else "🔴" if foreign < 0 else "⚪"
 
-        #val = f"{momentum:.2f}%" if momentum is not None else "N/A"
         col = "#2ecc71" #if (momentum is not None and momentum > 0) else "#e74c3c"
         sub = badge(
             f"**{icon} Foreign ETF Change:** {foreign:.2f}%",
