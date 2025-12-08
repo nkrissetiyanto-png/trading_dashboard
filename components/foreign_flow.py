@@ -15,7 +15,7 @@ def get_foreign_flow():
         # -------------------------------
         # 1) EIDO ETF (iShares Indonesia ETF)
         # -------------------------------
-        eido = yf.download("EIDO", period="1mo", interval="1d")
+        eido = yf.download("EIDO", period="5d", interval="1d")
 
         if not eido.empty and len(eido) >= 2:
             eido_change = (eido["Close"].iloc[-1] - eido["Close"].iloc[-2]) / eido["Close"].iloc[-2] * 100
