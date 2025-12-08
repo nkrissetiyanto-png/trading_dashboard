@@ -1,6 +1,7 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
+from components.foreign_flow import get_foreign_flow
 
 # ============================================================
 #  🔷 Konfigurasi Saham & Sektor
@@ -256,3 +257,15 @@ def render_sentiment(symbol):
                   f"{stock_score}/100" if stock_score else "N/A")
 
     st.progress(market_score)
+    # === Foreign Flow ===
+    flow_score, flow_bias, eido_chg, rupiah_chg, vol_ratio = get_foreign_flow()
+    
+    st.markdown("### 🌍 Foreign Flow (Investor Asing)")
+    
+    st.metric("Foreign Flow Score", f"{flow_score}/100")
+    st.write(f"**Status:** {flow_bias}")
+    
+    st.write(f"- EIDO Change: {eido_chg:.2f}%")
+    st.write(f"- Rupiah Strength: {rupiah_chg:.2f}%")
+    st.write(f"- IHSG Volume Ratio: {vol_ratio:.2f}%")
+
