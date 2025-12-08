@@ -226,39 +226,7 @@ def render_sentiment(symbol):
     #    icon = "🟢" if ihsg > 0 else "🔴"
     #    st.markdown(f"**{icon} IHSG Change:** {ihsg:.2f}%")
 
-    # -------------------------------
-    # Display Sector
-    # -------------------------------
-    st.markdown("### 🏭 Sector Sentiment")
 
-    st.write(f"**Sector:** {sector}")
-    st.write(f"**Sector Score:** {sector_score:.0f}/100")
-
-    # -------------------------------
-    # Display Foreign Flow
-    # -------------------------------
-    st.markdown("### 🌏 Foreign Flow")
-
-    icon = "🟢" if foreign > 0 else "🔴" if foreign < 0 else "⚪"
-    st.write(f"**{icon} Foreign ETF Change:** {foreign:.2f}%")
-
-    # -------------------------------
-    # Final Mood Summary
-    # -------------------------------
-    st.markdown("### 🔮 Market Mood Summary")
-
-    msgs = []
-
-    if ihsg is not None:
-        msgs.append(f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%).")
-
-    msgs.append(f"Sector sentiment is **{sector_score}/100**.")
-    msgs.append(f"Foreign flow indicates **{interpret_sentiment(foreign)}** ({foreign:+.2f}%).")
-
-    for m in msgs:
-        st.markdown(f"- {m}")
-
-    st.markdown("---")
 
     # ---- Layout ----
     c1, c2, c3, c4 = st.columns(4)
