@@ -139,10 +139,10 @@ while True:
                 render_sentiment(symbol)
             else:
                 render_crypto_sentiment(symbol)
+                render_ai_signal(df)
+                render_ai_reversal(df)
+                render_ai_confidence_chart()
 
-            render_ai_signal(df)
-            render_ai_reversal(df)
-            render_ai_confidence_chart()
             render_signals(df)
 
         with col2:
