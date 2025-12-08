@@ -1,92 +1,110 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
 
 class AIPredictor:
+    """
+    Simple rule-based AI (no sklearn, no model file).
+    Menggunakan 4 fitur:
+    - return 1 candle terakhir
+    - momentum 5 candle
+    - volume momentum
+    - candle body strength
+    """
 
     def __init__(self):
-        self.model = LogisticRegression()
-        self.scaler = StandardScaler()
+        pass
 
-        # Dummy training (supaya model tidak error saat pertama running)
-        X = np.array([[0, 0, 0], [1, 1, 1]])
-        y = np.array([0, 1])
-        self.scaler.fit(X)
-        X_scaled = self.scaler.transform(X)
-        self.model.fit(X_scaled, y)
+    def _extract_features(self, df: pd.DataFrame) -> np.ndarray:
+        df = df.copy()
 
-    def _extract_features(self, df):
-        """
-        Feature engineering sederhana:
-        - return 3 fitur: price momentum, volume momentum, candle body strength
-        """
+        # Paksa kolom numeric
+        for col in ["Open", "High", "Low", "Close", "Volume"]:
+            if col not in df.columns:
+                raise KeyError(f"Missing column: {col}")
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        df.dropna(subset=["Open", "Close", "Volume"], inplace=True)
+
+        if len(df) < 2:
+            return np.array([0.0, 0.0, 0.0, 0.0])
+
         close = df["Close"].values
         volume = df["Volume"].values
+        open_ = df["Open"].values
 
-        # Momentum 1 jam (4 candle 15m)
-        if len(close) < 10:
-            return np.array([0, 0, 0])
+        last = len(df) - 1
 
-        price_mom = (close[-1] - close[-4]) / close[-4] * 100
-        vol_mom = (volume[-1] - np.mean(volume[-10:])) / np.mean(volume[-10:]) * 100
-        candle = close[-1] - df["Open"].values[-1]
+        # Return 1 candle terakhir
+        if last >= 1 and close[last - 1] != 0:
+            ret_1 = (close[last] - close[last - 1]) / close[last - 1] * 100
+        else:
+            ret_1 = 0.0
 
-        return np.array([price_mom, vol_mom, candle])
+        # Momentum 5 candle
+        if last >= 5 and close[last - 5] != 0:
+            mom_5 = (close[last] - close[last - 5]) / close[last - 5] * 100
+        else:
+            mom_5 = ret_1
 
-    def predict(self, df):
+        # Volume momentum (bandingkan dengan rata-rata 20 candle)
+        start_idx = max(0, last - 20)
+        base_vol = np.mean(volume[start_idx:last + 1])
+        if base_vol and not np.isnan(base_vol):
+            vol_mom = (volume[last] - base_vol) / base_vol * 100
+        else:
+            vol_mom = 0.0
 
-        # Safety check
-        if df is None or len(df) < 30:
+        # Candle body strength
+        if open_[last] != 0:
+            body = (close[last] - open_[last]) / open_[last] * 100
+        else:
+            body = 0.0
+
+        return np.array([ret_1, mom_5, vol_mom, body])
+
+    def predict(self, df: pd.DataFrame):
+        # Minimal 10 data biar indikator ada sedikit konteks
+        if df is None or len(df) < 10:
             return {
                 "direction": "N/A",
                 "prob_up": 0.0,
                 "prob_down": 0.0,
-                "confidence": 0.0
+                "confidence": 0.0,
             }
 
-        # Create features
         try:
-            feats = add_features(df.copy())
+            feats = self._extract_features(df)
         except Exception as e:
-            print("Feature engineering error:", e)
+            print("AI feature error:", e)
             return {
                 "direction": "N/A",
                 "prob_up": 0.0,
                 "prob_down": 0.0,
-                "confidence": 0.0
+                "confidence": 0.0,
             }
 
-        last = feats.iloc[-1]
-
-        # RULE-BASED AI (no ML model)
+        # Scoring sederhana: berapa banyak fitur yang bullish (>0)
         score = 0
         total = 4
 
-        # Return momentum
-        if last["return"] > 0:
+        if feats[0] > 0:  # return
+            score += 1
+        if feats[1] > 0:  # momentum
+            score += 1
+        if feats[2] > 0:  # volume
+            score += 1
+        if feats[3] > 0:  # body
             score += 1
 
-        # MACD
-        if last["macd"] > last["signal"]:
-            score += 1
-
-        # RSI
-        if last["rsi"] < 30:
-            score += 1
-        elif last["rsi"] > 70:
-            score -= 1
-
-        # Volume expansion
-        if last["vol_change"] > 0:
-            score += 1
-
-        normalized = (score + 1) / total   # convert score range to 0–1
-        direction = "UP" if normalized >= 0.5 else "DOWN"
+        prob_up = score / total
+        prob_down = 1 - prob_up
+        direction = "UP" if prob_up >= 0.5 else "DOWN"
+        confidence = abs(prob_up - prob_down)
 
         return {
             "direction": direction,
-            "prob_up": float(normalized),
-            "prob_down": float(1 - normalized),
-            "confidence": abs(0.5 - normalized) * 2
+            "prob_up": float(prob_up),
+            "prob_down": float(prob_down),
+            "confidence": float(confidence),
         }
+
