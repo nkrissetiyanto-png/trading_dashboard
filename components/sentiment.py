@@ -239,20 +239,19 @@ def render_sentiment(symbol):
 
     # === CARD 1: Fear & Greed ===
     with c1:
-        #st.markdown("### 🇮🇩 IHSG Sentiment")
-        
         if ihsg is None:
             val = "IHSG data unavailable."
+            html = premium_card("🇮🇩 IHSG Sentiment", val, sub, icon)
         else:
             icon = "🟢" if ihsg > 0 else "🔴"
             val = f"**{icon} IHSG Change:** {ihsg:.2f}%"
-
-        col = "#2ecc71" if ihsg > 0 else "#e74c3c"
-        sub = badge(
-            f"**{icon} IHSG Sentiment: {ihsg:.2f}%",
-            col,
-        )
-        html = premium_card("🇮🇩 IHSG Sentiment", f"{ihsg:.2f}%", sub, icon)
+            col = "#2ecc71" if ihsg > 0 else "#e74c3c"
+            sub = badge(
+                f"**{icon} IHSG is {interpret_sentiment(ihsg)}: {ihsg:.2f}%",
+                col,
+            )
+            html = premium_card("🇮🇩 IHSG Sentiment", f"{ihsg:.2f}%", sub, icon)
+        
         st.markdown(html, unsafe_allow_html=True)
 
     # === CARD 2: BTC Dominance (hanya BTC) ===
@@ -284,8 +283,8 @@ def render_sentiment(symbol):
 
     msgs = []
 
-    if ihsg is not None:
-        msgs.append(f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%).")
+    #if ihsg is not None:
+    #    msgs.append(f"IHSG is **{interpret_sentiment(ihsg)}** ({ihsg:+.2f}%).")
 
     msgs.append(f"Sector sentiment is **{sector_score}/100**.")
     msgs.append(f"Foreign flow indicates **{interpret_sentiment(foreign)}** ({foreign:+.2f}%).")
