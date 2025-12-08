@@ -241,7 +241,7 @@ def render_sentiment(symbol):
             icon = "🟢" if ihsg > 0 else "🔴"
             val = f"**{icon} IHSG Change:** {ihsg:.2f}%"
 
-        html = premium_card("🇮🇩 IHSG Sentiment", val, sub_html=sub, icon=mood_icon)
+        html = premium_card("🇮🇩 IHSG Sentiment", val, "", icon=mood_icon)
         st.markdown(html, unsafe_allow_html=True)
 
     # === CARD 2: BTC Dominance (hanya BTC) ===
