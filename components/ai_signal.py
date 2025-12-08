@@ -1,5 +1,6 @@
 import streamlit as st
 from components.ai_predictor import AIPredictor
+from components.ai_memory import save_ai_result
 
 ai = AIPredictor()
 
@@ -11,6 +12,8 @@ def render_ai_signal(df):
     if result is None:
         st.warning("AI model unavailable.")
         return
+
+    save_ai_result(result)
 
     direction = result["direction"]
     prob_up = result["prob_up"]
