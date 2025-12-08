@@ -11,7 +11,7 @@ from components.crypto_sentiment import render_crypto_sentiment
 from components.ai_signal import render_ai_signal
 from data.data_loader import load_candles
 from components.ai_confidence_chart import render_ai_confidence_chart
-from components.ai_reversal import render_ai_reversal
+#from components.ai_reversal import render_ai_reversal
 from components.reversal_detector import render_reversal_detector
 
 # ======================================================
