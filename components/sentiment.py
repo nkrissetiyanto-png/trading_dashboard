@@ -247,6 +247,7 @@ def render_sentiment(symbol):
             icon = "🟢" if ihsg > 0 else "🔴"
             val = f"**{icon} IHSG Change:** {ihsg:.2f}%"
 
+        col = "#2ecc71" if ihsg > 0 else "#e74c3c"
         sub = badge(
             f"**{icon} IHSG Sentiment: {ihsg:.2f}%",
             col,
