@@ -50,6 +50,37 @@ class AIPredictor:
         df = df.dropna(subset=["Open", "Close"])
         return df
 
+    def _explain(self, row):
+        msgs = []
+
+        # 1. Price Return (momentum)
+        if row["return"] > 0:
+            msgs.append("📈 Harga menunjukkan momentum positif (return naik).")
+        else:
+            msgs.append("📉 Harga memiliki momentum negatif (return turun).")
+
+        # 2. MACD
+        if row["macd"] > row["signal"]:
+            msgs.append("💹 MACD berada di atas garis signal → tekanan bullish.")
+        else:
+            msgs.append("📉 MACD berada di bawah garis signal → tekanan bearish.")
+
+        # 3. RSI
+        if row["rsi"] < 30:
+            msgs.append("🟢 RSI berada pada area oversold → potensi reversal naik.")
+        elif row["rsi"] > 70:
+            msgs.append("🔴 RSI berada pada area overbought → risiko koreksi turun.")
+        else:
+            msgs.append("⚪ RSI berada di area netral → tidak ada ekstrem.")
+
+        # 4. Volume Strength
+        if row["vol_change"] > 0:
+            msgs.append("📊 Volume meningkat → minat pasar bertambah.")
+        else:
+            msgs.append("🔻 Volume menurun → minat pasar melemah.")
+
+        return msgs
+        
     # ---------- Feature extraction ----------
     def _extract_features(self, df: pd.DataFrame) -> np.ndarray:
         df = self._normalize_ohlcv(df)
@@ -137,4 +168,5 @@ class AIPredictor:
             "prob_up": float(prob_up),
             "prob_down": float(prob_down),
             "confidence": float(confidence),
+            "explanations": explanations
         }
