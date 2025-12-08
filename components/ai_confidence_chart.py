@@ -37,4 +37,5 @@ def render_ai_confidence_chart():
         margin=dict(l=10, r=10, t=30, b=10),
     )
 
+    st.write("History size:", len(history))
     st.plotly_chart(fig, use_container_width=True)
