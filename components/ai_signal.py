@@ -9,11 +9,10 @@ def render_ai_signal(df):
     #st.write("DEBUG — Data length:", len(df))
 
     result = ai.predict(df)
+    save_ai_result(result)
     if result is None:
         st.warning("AI model unavailable.")
         return
-
-    save_ai_result(result)
 
     direction = result["direction"]
     prob_up = result["prob_up"]
