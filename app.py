@@ -93,6 +93,12 @@ interval = st.sidebar.selectbox(
     intervals_stock if mode.startswith("Saham") else intervals_crypto
 )
 
+reversal_sensitivity = st.sidebar.select_slider(
+    "Reversal Sensitivity",
+    options=["Low", "Medium", "High"],
+    value="Medium"
+)
+
 auto_refresh = st.sidebar.checkbox("Auto Refresh", True)
 refresh_rate = st.sidebar.slider("Refresh (seconds)", 3, 30, 5)
 
