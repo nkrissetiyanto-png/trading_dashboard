@@ -298,5 +298,5 @@ def render_sentiment(symbol):
             col,
         )
         #title = f"{symbol} Volume Pulse"
-        html = premium_card("🔮 Market Mood Summary", msgs, sub_html=sub, icon=pulse_icon)
+        html = premium_card("🔮 Market Mood Summary", msgs, sub_html=sub, icon="")
         st.markdown(html, unsafe_allow_html=True)
