@@ -48,6 +48,94 @@ class AIPredictor:
 
         return df.dropna()
 
+    def detect_reversal(self, df):
+        """
+        AI Reversal Detector
+        Mengembalikan:
+        - type: 'bullish', 'bearish', atau None
+        - score: probabilitas 0-1
+        - reasons: list penjelasan
+        """
+
+        df = self._normalize_ohlcv(df)
+        if len(df) < 20:
+            return {"type": None, "score": 0.0, "reasons": []}
+
+        close = df["Close"].values
+        open_ = df["Open"].values
+        volume = df["Volume"].values
+
+        last = len(df) - 1
+        reasons = []
+        score = 0
+
+        # ---------- 1. RSI reversal ----------
+        # compute RSI 14
+        delta = np.diff(close)
+        gain = np.maximum(delta, 0)
+        loss = np.abs(np.minimum(delta, 0))
+
+        avg_gain = gain[-14:].mean() if len(gain) >= 14 else 0
+        avg_loss = loss[-14:].mean() if len(loss) >= 14 else 0
+
+        if avg_loss == 0:
+            rsi = 50
+        else:
+            rs = avg_gain / avg_loss
+            rsi = 100 - (100 / (1 + rs))
+
+        # RSI oversold → bullish reversal
+        if rsi < 30:
+            score += 1
+            reasons.append("RSI extremely low → oversold condition")
+
+        # RSI overbought → bearish reversal
+        if rsi > 70:
+            score += 1
+            reasons.append("RSI extremely high → overbought condition")
+
+        # ---------- 2. Volume exhaustion ----------
+        base_vol = np.mean(volume[last-10:last])
+        if base_vol > 0:
+            vol_ratio = volume[last] / base_vol
+        else:
+            vol_ratio = 1
+
+        if vol_ratio < 0.7:
+            score += 1
+            reasons.append("Volume exhaustion detected → trend weakening")
+
+        # ---------- 3. Candle body compression ----------
+        body = abs(close[last] - open_[last])
+        avg_body = np.mean(np.abs(close[last-10:last] - open_[last-10:last]))
+
+        if avg_body > 0 and body < avg_body * 0.4:
+            score += 1
+            reasons.append("Candle compression → market preparing reversal")
+
+        # ---------- 4. Trend momentum ----------
+        if last >= 5:
+            mom = (close[last] - close[last-5]) / close[last-5] * 100
+        else:
+            mom = 0
+
+        if mom < -1:
+            type_ = "bullish"    # downtrend losing steam
+            score += 1
+        elif mom > 1:
+            type_ = "bearish"    # uptrend losing steam
+            score += 1
+        else:
+            type_ = None
+
+        prob = min(score / 5, 1)
+
+        return {
+            "type": type_,
+            "score": float(prob),
+            "reasons": reasons
+        }
+
     # -----------------------------
     # Feature Explanation (array-based)
     # -----------------------------
