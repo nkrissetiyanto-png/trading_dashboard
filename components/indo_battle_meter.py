@@ -76,12 +76,6 @@ def render_battle_meter():
             <div style="color:#e5e7eb;font-size:14px;margin-bottom:6px;">
                 Foreign Strength Meter
             </div>
-            
-            <div style="width:100%;height:16px;border-radius:999px;background:rgba(17,24,39,1);overflow:hidden;border:1px solid rgba(55,65,81,0.9);">
-               
-            </div>
-
-
             <div style="margin-top:8px;color:#e5e7eb;font-size:13px;">
                 Score: <b>{score}/100</b><br>{status}
             </div>
