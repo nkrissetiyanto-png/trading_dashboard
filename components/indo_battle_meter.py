@@ -71,33 +71,14 @@ def render_battle_meter():
     else:
         status = "⚪ Balanced Flow"
 
-    st.markdown(
-        f"""
-        <div style="
-            padding:18px;
-            border-radius:16px;
-            background:rgba(15,23,42,0.9);
-            border:1px solid rgba(148,163,184,0.4);
-            box-shadow:0 6px 20px rgba(0,0,0,0.45);
-        ">
+    st.markdown(f"""
+        <div style="padding:18px;border-radius:16px;background:rgba(15,23,42,0.9);border:1px solid rgba(148,163,184,0.4);box-shadow:0 6px 20px rgba(0,0,0,0.45);">
             <div style="color:#e5e7eb;font-size:14px;margin-bottom:6px;">
                 Foreign Strength Meter
             </div>
 
-            <div style="
-                width:100%;
-                height:16px;
-                border-radius:999px;
-                background:#111827;
-                overflow:hidden;
-                border:1px solid rgba(55,65,81,0.9);
-            ">
-                <div style="
-                    width:100%;
-                    height:100%;
-                    background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);
-                    transition:width 0.5s ease-out;
-                "></div>
+            <div style="width:100%;height:16px;border-radius:999px;background:#111827;overflow:hidden;border:1px solid rgba(55,65,81,0.9);">
+                <div style="width:100%;height:100%;background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);transition:width 0.5s ease-out;"></div>
             </div>
 
             <div style="margin-top:8px;color:#e5e7eb;font-size:13px;">
