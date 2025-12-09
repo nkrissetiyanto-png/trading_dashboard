@@ -15,7 +15,7 @@ from components.ai_final_engine import final_decision_engine
 from components.reversal_detector import render_reversal_detector
 from components.ai_predictor import AIPredictor
 from components.indo_heatmap import render_heatmap
-#from components.indo_battle_meter import render_battle_meter
+from components.indo_battle_meter import render_battle_meter
 from components.reversal_probability import render_reversal_probability
 
 # ======================================================
