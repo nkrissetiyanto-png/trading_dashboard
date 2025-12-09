@@ -71,26 +71,41 @@ def render_battle_meter():
     else:
         status = "⚪ Balanced Flow"
 
-    st.markdown(f"""
+    st.markdown(
+        f"""
         <div style="
             padding:18px;
-            border-radius:18px;
-            background:rgba(255,255,255,0.05);
-            border:1px solid rgba(255,255,255,0.15);
-            backdrop-filter:blur(10px);
-            box-shadow:0 4px 14px rgba(0,0,0,0.25);
-            text-align:center;
+            border-radius:16px;
+            background:rgba(15,23,42,0.9);
+            border:1px solid rgba(148,163,184,0.4);
+            box-shadow:0 6px 20px rgba(0,0,0,0.45);
         ">
-            <p style="font-size:15px; color:#DFE6F0; font-weight:600; margin-bottom:6px;">
+            <div style="color:#e5e7eb;font-size:14px;margin-bottom:6px;">
                 Foreign Strength Meter
-            </p>
-            <p style="font-size:32px; font-weight:700; color:white; margin-top:-4px;">
+            </div>
+
+            <div style="
+                width:100%;
+                height:16px;
+                border-radius:999px;
+                background:#111827;
+                overflow:hidden;
+                border:1px solid rgba(55,65,81,0.9);
+            ">
+                <div style="
+                    width:100%;
+                    height:100%;
+                    background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);
+                    transition:width 0.5s ease-out;
+                "></div>
+            </div>
+
+            <div style="margin-top:8px;color:#e5e7eb;font-size:13px;">
                 Score: <b>{score}/100</b><br>{status}
-            </p>
-            <div style="font-size:13px; color:#AAB4C2; margin-top:8px;">
-                {status}
             </div>
         </div>
-        """,unsafe_allow_html=True)    
+        """,
+        unsafe_allow_html=True
+    ) 
     
     
