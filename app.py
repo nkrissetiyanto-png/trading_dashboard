@@ -28,6 +28,21 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+# ================================
+# GOOGLE ANALYTICS (GLOBAL SCRIPT)
+# ================================
+GA_ID = "G-4RD8K3ZQ52"
+
+st.markdown(f"""
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){{dataLayer.push(arguments);}}
+gtag('js', new Date());
+gtag('config', '{GA_ID}');
+</script>
+""", unsafe_allow_html=True)
 
 # ======================================================
 # PREMIUM LOADING CSS
