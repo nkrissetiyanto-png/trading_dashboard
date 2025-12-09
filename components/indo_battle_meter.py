@@ -71,6 +71,8 @@ def render_battle_meter():
     else:
         status = "⚪ Balanced Flow"
 
+    
+    
     st.markdown(
         f"""
         <div style="
@@ -105,5 +107,5 @@ def render_battle_meter():
             </div>
         </div>
         """,
-        unsafe_allow_html=True,
+        unsafe_allow_html=True
     )
