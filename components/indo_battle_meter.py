@@ -77,12 +77,16 @@ def render_battle_meter():
                 Foreign Strength Meter
             </div>
             
-            <div style="width:100%;height:16px;border-radius:999px;background:#111827;overflow:hidden;border:1px solid rgba(55,65,81,0.9);">
-                <div style="width:100%;height:100%;background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e);transition:width 0.5s ease-out;">
-                Score: <b>{score}/100</b><br>{status}
+            <div style="width:100%;height:16px;border-radius:999px;background:rgba(17,24,39,1);overflow:hidden;border:1px solid rgba(55,65,81,0.9);">
+                <div style="width:100%;height:100%;background:linear-gradient(90deg,rgba(239,68,68,1),rgba(245,158,11,1),rgba(34,197,94,1));transition:width 0.5s ease-out;">
+                
                 </div>
             </div>
 
+
+            <div style="margin-top:8px;color:#e5e7eb;font-size:13px;">
+                Score: <b>{score}/100</b><br>{status}
+            </div>
         </div>
         """,
         unsafe_allow_html=True
