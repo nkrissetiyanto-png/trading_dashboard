@@ -145,7 +145,6 @@ while True:
 
         with col1:
             render_smartmoney(df)
-            render_signals(df)
             render_chart(df)
             render_indicators(df)
 
@@ -175,7 +174,9 @@ while True:
 
                 render_reversal_detector(df, reversal_sensitivity)
                 render_ai_confidence_chart()
-                
+
+            render_signals(df)
+
         with col2:
             if mode.startswith("Crypto"):
                 render_orderbook(symbol)
