@@ -149,7 +149,7 @@ while True:
             if mode.startswith("Saham Indonesia"):
                 render_sentiment(symbol)
                 render_heatmap(df)
-                #render_battle_meter(58)
+                render_battle_meter(58)
                 render_reversal_probability(df)
             else:
                 render_crypto_sentiment(symbol)
