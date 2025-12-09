@@ -16,13 +16,46 @@ def add_history(prob):
     if len(hist) > 120:   # simpan max 120 data
         hist.pop(0)
 
+def normalize_ohlcv(df):
+    """
+    Rename kolom apa pun menjadi: Open, High, Low, Close, Volume
+    Aman untuk data saham & crypto.
+    """
+    df = df.copy()
+    col_map = {}
+
+    candidates = {
+        "Open":   ["open", "o"],
+        "High":   ["high", "h"],
+        "Low":    ["low", "l"],
+        "Close":  ["close", "c", "price", "last"],
+        "Volume": ["volume", "vol", "qty"],
+    }
+
+    lower_cols = {c.lower(): c for c in df.columns}
+
+    for std, keys in candidates.items():
+        for k in keys:
+            if k.lower() in lower_cols:
+                col_map[std] = lower_cols[k.lower()]
+                break
+
+    # jika ada kolom yang benar2 tidak ditemukan → error
+    missing = [c for c in ["Open", "High", "Low", "Close", "Volume"] if c not in col_map]
+    if missing:
+        raise KeyError(f"Missing OHLCV cols: {missing}. Available: {list(df.columns)}")
+
+    df = df.rename(columns={orig: std for std, orig in col_map.items()})
+
+    # convert to numeric
+    for c in ["Open", "High", "Low", "Close", "Volume"]:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+
+    return df.dropna(subset=["Open","High","Low","Close"])
+
 def detect_zones(df):
-    """
-    Menggunakan swing high/low + volatility band.
-    Output:
-      - list demand zones
-      - list supply zones
-    """
+    df = normalize_ohlcv(df)   # ⬅️ FIX PALING PENTING
+
     close = df["Close"].values
     high  = df["High"].values
     low   = df["Low"].values
@@ -34,17 +67,15 @@ def detect_zones(df):
     if n < 30:
         return zones_demand, zones_supply
 
-    # SWING DETECTION
+    # swing detection
     for i in range(2, n-2):
-        # Swing Low → Demand
         if low[i] < low[i-1] and low[i] < low[i+1]:
             zones_demand.append((low[i], low[i] * 1.003))
 
-        # Swing High → Supply
         if high[i] > high[i-1] and high[i] > high[i+1]:
             zones_supply.append((high[i] * 0.997, high[i]))
 
-    # Cluster zones to avoid too many levels
+    # cluster zones
     def cluster(zones):
         if not zones:
             return []
@@ -52,13 +83,14 @@ def detect_zones(df):
         merged = [zones[0]]
         for z in zones[1:]:
             last = merged[-1]
-            if abs(z[0] - last[1]) / last[1] < 0.004:  # 0.4% merge threshold
+            if abs(z[0] - last[1]) / last[1] < 0.004:
                 merged[-1] = (min(last[0], z[0]), max(last[1], z[1]))
             else:
                 merged.append(z)
         return merged
 
     return cluster(zones_demand), cluster(zones_supply)
+
 
 def auto_reversal_alert(prob, direction):
     """
