@@ -293,12 +293,4 @@ def render_sentiment(symbol):
     for m in msgs:
         st.markdown(f"- {m}")
 
-    st.subheader("⚔️ Domestic vs Foreign Battle Meter (Premium)")
-
-    # Konversi foreign flow (-5% sampai +5%) → skala 0–100
-    # 0% = 50, tiap +1% = +10 poin
-    battle_score = int(50 + foreign * 10)
-    battle_score = max(0, min(100, battle_score))
-    
-    render_battle_meter(battle_score)
     st.markdown("---")
