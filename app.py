@@ -16,7 +16,8 @@ from components.reversal_detector import render_reversal_detector
 from components.ai_predictor import AIPredictor
 from components.indo_heatmap import render_heatmap
 from components.indo_battle_meter import render_battle_meter
-from components.reversal_probability import render_reversal_probability
+#from components.reversal_probability import render_reversal_probability
+from components.reversal_premium_ui import render_reversal_premium
 
 # ======================================================
 # PAGE CONFIG
@@ -150,7 +151,8 @@ while True:
                 render_sentiment(symbol)
                 render_heatmap(df)
                 render_battle_meter()
-                render_reversal_probability(df)
+                #render_reversal_probability(df)
+                render_reversal_premium(df)
             else:
                 render_crypto_sentiment(symbol)
                 render_ai_signal(df)
