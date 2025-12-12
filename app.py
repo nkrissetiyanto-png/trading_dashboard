@@ -24,7 +24,7 @@ from components.reversal_premium_level2 import render_reversal_premium_level2
 # PAGE CONFIG
 # ======================================================
 st.set_page_config(
-    page_title="🔥 Nanang Trading Dashboard",
+    page_title="🔥 Cuanmology Trading Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -154,7 +154,7 @@ while True:
     # --- render semua konten di container stabil ---
     with page.container():
 
-        st.title(f"🔥 Nanang Premium Dashboard — {symbol}")
+        st.title(f"🔥 Cuanmology Premium Dashboard — {symbol}")
 
         col1, col2 = st.columns([3, 1])
 
