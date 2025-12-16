@@ -65,7 +65,7 @@ def ai_indicator_commentary(df):
 # PREMIUM LEVEL 3 RENDERER
 # ============================================================
 
-def render_indicators_premium_level3(df):
+def render_indicators(df):
 
     st.subheader("🚀 Technical Indicators Premium Level 3 (Ultra)")
 
