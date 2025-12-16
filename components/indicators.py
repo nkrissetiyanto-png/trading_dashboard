@@ -1,195 +1,146 @@
 import streamlit as st
-import plotly.graph_objects as go
+import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 
-# ============================================================
-# INDICATORS
-# ============================================================
+
+# ===========================
+# Indicator Functions
+# ===========================
 
 def EMA(series, period):
     return series.ewm(span=period, adjust=False).mean()
 
 def RSI(series, period=14):
     delta = series.diff()
-    gain = delta.clip(lower=0).ewm(span=period).mean()
-    loss = (-delta.clip(upper=0)).ewm(span=period).mean()
-    rsi = 100 - (100 / (1 + gain / loss))
-    return rsi
+    gain = (delta.where(delta > 0, 0)).ewm(span=period).mean()
+    loss = (-delta.where(delta < 0, 0)).ewm(span=period).mean()
+    RS = gain / loss
+    return 100 - (100 / (1 + RS))
 
 def MACD(series):
-    fast = EMA(series, 12)
-    slow = EMA(series, 26)
-    macd = fast - slow
+    exp1 = EMA(series, 12)
+    exp2 = EMA(series, 26)
+    macd = exp1 - exp2
     signal = EMA(macd, 9)
-    hist = macd - signal
-    return macd, signal, hist
+    return macd, signal
 
-# ============================================================
-# AI COMMENTARY
-# ============================================================
 
-def ai_indicator_commentary(df):
-    rsi = df["RSI"].iloc[-1]
-    macd = df["MACD"].iloc[-1]
-    sig = df["MACD_SIGNAL"].iloc[-1]
-    close = df["close"].iloc[-1]
-    ema20 = df["EMA20"].iloc[-1]
-
-    notes = []
-
-    # EMA Trend
-    if close > ema20:
-        notes.append("Harga berada **di atas EMA20** → market short-term bullish.")
-    else:
-        notes.append("Harga berada **di bawah EMA20** → short-term bearish momentum.")
-
-    # RSI
-    if rsi > 70:
-        notes.append("RSI menunjukkan kondisi **overbought** – potensi koreksi.")
-    elif rsi < 30:
-        notes.append("RSI **oversold** – peluang technical rebound.")
-    else:
-        notes.append("RSI normal, market **tidak jenuh**.")
-
-    # MACD
-    if macd > sig:
-        notes.append("MACD **bullish crossover** → momentum naik menguat.")
-    else:
-        notes.append("MACD **bearish crossover** → momentum melemah.")
-
-    # Combine
-    summary = " ".join(notes)
-    return f"### 🧠 AI Market Insight\n{summary}"
-
-# ============================================================
-# PREMIUM LEVEL 3 RENDERER
-# ============================================================
+# ===========================
+# MAIN RENDER FUNCTION
+# ===========================
 
 def render_indicators(df):
+    st.subheader("📊 Technical Indicators Premium")
 
-    st.subheader("🚀 Technical Indicators Premium Level 3 (Ultra)")
-
-    # compute indicators
     df["EMA20"] = EMA(df["close"], 20)
     df["RSI"] = RSI(df["close"])
-    df["MACD"], df["MACD_SIGNAL"], df["MACD_HIST"] = MACD(df["close"])
+    df["MACD"], df["MACD_SIGNAL"] = MACD(df["close"])
 
+    # ===============================
+    # MULTI-PANEL → SINGLE CHART
+    # ===============================
     fig = go.Figure()
 
-    # ====================================================================
-    # 1) PRICE + EMA (Glow + Gradient Shadow)
-    # ====================================================================
-    # Shadow glow for Close
+    # ---------------------------
+    # Panel 1: Price + EMA20
+    # ---------------------------
     fig.add_trace(go.Scatter(
         x=df.index, y=df["close"],
         mode="lines",
         name="Close",
-        line=dict(width=2, color="#7AB6FF"),
-        hovertemplate="Close: %{y}<extra></extra>"
+        line=dict(width=1.8, color="#60a5fa")
     ))
 
-    # EMA glow
     fig.add_trace(go.Scatter(
         x=df.index, y=df["EMA20"],
         mode="lines",
         name="EMA20",
-        line=dict(width=3, color="#FFB84D"),
-        hovertemplate="EMA20: %{y}<extra></extra>"
+        line=dict(width=1.5, color="#f97316")
     ))
 
-    # ====================================================================
-    # 2) RSI (Neon Green, Glow)
-    # ====================================================================
+    # ---------------------------
+    # Panel 2: RSI
+    # ---------------------------
     fig.add_trace(go.Scatter(
         x=df.index, y=df["RSI"],
         mode="lines",
         name="RSI",
-        line=dict(width=3, color="#00FFAA"),
-        yaxis="y2",
-        hovertemplate="RSI: %{y}<extra></extra>"
+        line=dict(width=1.4, color="#34d399"),
+        yaxis="y2"
     ))
 
-    fig.add_hline(y=70, line_dash="dash", line_color="red", yref="y2")
-    fig.add_hline(y=30, line_dash="dash", line_color="green", yref="y2")
+    # RSI thresholds
+    fig.add_hline(y=70, line_dash="dash", line_color="rgba(255,0,0,0.4)", yref="y2")
+    fig.add_hline(y=30, line_dash="dash", line_color="rgba(0,255,0,0.4)", yref="y2")
 
-    # ====================================================================
-    # 3) MACD (Neon Purple / Red + Histogram)
-    # ====================================================================
-    # Histogram
-    fig.add_trace(go.Bar(
-        x=df.index,
-        y=df["MACD_HIST"],
-        name="MACD Histogram",
-        marker_color=np.where(df["MACD_HIST"] > 0, "#AA7BFF", "#FF6F6F"),
-        yaxis="y3",
-        opacity=0.45,
-        hovertemplate="Hist: %{y}<extra></extra>"
-    ))
-
-    # MACD Line
+    # ---------------------------
+    # Panel 3: MACD
+    # ---------------------------
     fig.add_trace(go.Scatter(
         x=df.index, y=df["MACD"],
         mode="lines",
         name="MACD",
-        line=dict(width=3, color="#B388FF"),
+        line=dict(width=1.4, color="#a78bfa"),
         yaxis="y3"
     ))
 
-    # Signal Line
     fig.add_trace(go.Scatter(
         x=df.index, y=df["MACD_SIGNAL"],
         mode="lines",
         name="Signal",
-        line=dict(width=3, color="#FF7676"),
+        line=dict(width=1.4, color="#fbcfe8"),
         yaxis="y3"
     ))
 
-    # ====================================================================
-    # LAYOUT — Dark Neon Premium Theme
-    # ====================================================================
+    # ===============================
+    # LAYOUT — 3 PANELS IN 1 CHART
+    # ===============================
     fig.update_layout(
-        template="plotly_dark",
-        height=800,
-        margin=dict(l=20, r=40, t=40, b=20),
-        paper_bgcolor="rgba(14,17,23,1)",
-        plot_bgcolor="rgba(14,17,23,1)",
 
-        yaxis=dict(
+        # MANUAL DARK MODE → TANPA TEMPLATE
+        paper_bgcolor="#0f172a",
+        plot_bgcolor="#0f172a",
+        font=dict(color="#e2e8f0"),
+
+        # 3 Y AXES
+        xaxis=dict(
+            domain=[0, 1],
+            showgrid=False
+        ),
+
+        yaxis=dict(             # Panel 1 (Price)
+            domain=[0.60, 1.00],
             title="Price",
-            showgrid=False,
-            zeroline=False
-        ),
-        yaxis2=dict(
-            title="RSI",
-            overlaying="y",
-            side="right",
-            range=[0, 100],
-            showgrid=False,
-            zeroline=False
-        ),
-        yaxis3=dict(
-            title="MACD",
-            anchor="free",
-            overlaying="y",
-            side="right",
-            position=1.08,
-            showgrid=False,
-            zeroline=True
+            showgrid=True,
+            gridcolor="rgba(255,255,255,0.05)"
         ),
 
+        yaxis2=dict(            # Panel 2 (RSI)
+            domain=[0.33, 0.58],
+            title="RSI",
+            showgrid=True,
+            gridcolor="rgba(255,255,255,0.05)",
+            range=[0, 100]
+        ),
+
+        yaxis3=dict(            # Panel 3 (MACD)
+            domain=[0.05, 0.30],
+            title="MACD",
+            showgrid=True,
+            gridcolor="rgba(255,255,255,0.05)"
+        ),
+
+        height=900,
         legend=dict(
-            bgcolor="rgba(0,0,0,0)",
             orientation="h",
             yanchor="bottom",
             y=1.02,
-            xanchor="center",
-            x=0.5
-        )
+            xanchor="right",
+            x=1
+        ),
+
+        margin=dict(l=40, r=40, t=80, b=40)
     )
 
     st.plotly_chart(fig, use_container_width=True)
-
-    # ====================================================================
-    # AI COMMENTARY
-    # ====================================================================
-    st.markdown(ai_indicator_commentary(df))
