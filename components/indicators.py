@@ -3,39 +3,18 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
+# =====================================================
+# UTILITIES
+# =====================================================
 
-# ======================================================
-# NORMALIZER (wajib untuk crypto & saham indo)
-# ======================================================
-def normalize_df(df):
-    rename_map = {}
-    lower = {c.lower(): c for c in df.columns}
-
-    if "close" in lower:
-        rename_map[lower["close"]] = "Close"
-    if "open" in lower:
-        rename_map[lower["open"]] = "Open"
-    if "high" in lower:
-        rename_map[lower["high"]] = "High"
-    if "low" in lower:
-        rename_map[lower["low"]] = "Low"
-    if "volume" in lower:
-        rename_map[lower["volume"]] = "Volume"
-
-    df = df.rename(columns=rename_map)
-    return df
-
-
-# ======================================================
-# INDICATOR CALCULATIONS
-# ======================================================
 def EMA(series, period):
     return series.ewm(span=period, adjust=False).mean()
 
 def RSI(series, period=14):
     delta = series.diff()
-    gain = delta.clip(lower=0).ewm(span=period).mean()
-    loss = (-delta.clip(upper=0)).ewm(span=period).mean()
+    gain = (delta.where(delta > 0, 0)).ewm(span=period).mean()
+    loss = (-delta.where(delta < 0, 0)).ewm(span=period).mean()
+
     RS = gain / loss
     return 100 - (100 / (1 + RS))
 
@@ -46,214 +25,160 @@ def MACD(series):
     signal = EMA(macd, 9)
     return macd, signal
 
-def Bollinger(series, period=20, std=2):
-    mid = series.rolling(period).mean()
-    sd = series.rolling(period).std()
-    upper = mid + std * sd
-    lower = mid - std * sd
-    return mid, upper, lower
+# ---------------------------
+# SUPER TREND CALC
+# ---------------------------
 
-def ATR(df, period=14):
-    high = df["High"]
-    low = df["Low"]
-    close = df["Close"]
+def calc_supertrend(df, period=10, multiplier=3):
+    df = df.copy()
 
-    prev_close = close.shift(1)
-    tr = pd.concat([
-        high - low,
-        (high - prev_close).abs(),
-        (low - prev_close).abs()
-    ], axis=1).max(axis=1)
+    df["TR"] = np.maximum.reduce([
+        df["high"] - df["low"],
+        (df["high"] - df["close"].shift()).abs(),
+        (df["low"] - df["close"].shift()).abs()
+    ])
 
-    return tr.rolling(period).mean()
+    df["ATR"] = df["TR"].rolling(period).mean()
 
-def Supertrend(df, period=10, multiplier=3):
-    atr = ATR(df, period)
-    hl2 = (df["High"] + df["Low"]) / 2
+    hl2 = (df["high"] + df["low"]) / 2
+    df["upperband"] = hl2 + multiplier * df["ATR"]
+    df["lowerband"] = hl2 - multiplier * df["ATR"]
 
-    upperband = hl2 + multiplier * atr
-    lowerband = hl2 - multiplier * atr
+    df["ST"] = 0.0
+    df["ST_DIR"] = 1
 
-    st = pd.Series(index=df.index)
-    direction = pd.Series(index=df.index)
+    for i in range(period, len(df)):
+        prev = df["ST"].iloc[i - 1]
 
-    for i in range(1, len(df)):
-        # Trend direction
-        if df["Close"].iloc[i] > upperband.iloc[i - 1]:
-            direction.iloc[i] = 1
-        elif df["Close"].iloc[i] < lowerband.iloc[i - 1]:
-            direction.iloc[i] = -1
+        # Determine direction
+        if df["close"].iloc[i] > prev:
+            df.at[i, "ST_DIR"] = 1
         else:
-            direction.iloc[i] = direction.iloc[i - 1]
+            df.at[i, "ST_DIR"] = -1
 
-        # Final supertrend band
-        if direction.iloc[i] == 1:
-            st.iloc[i] = lowerband.iloc[i]
-        else:
-            st.iloc[i] = upperband.iloc[i]
+        # Pick band based on direction
+        df.at[i, "ST"] = df["lowerband"].iloc[i] if df["ST_DIR"].iloc[i] == 1 else df["upperband"].iloc[i]
 
-    return st, direction
+    return df
 
 
-# ======================================================
-# RENDER PREMIUM MULTI-PANEL CHART
-# ======================================================
+# ---------------------------
+# TREND RIBBON (EMA HEATMAP)
+# ---------------------------
+
+def trend_ribbon(df):
+    df = df.copy()
+    ribbons = {
+        "EMA20": EMA(df["close"], 20),
+        "EMA50": EMA(df["close"], 50),
+        "EMA100": EMA(df["close"], 100),
+        "EMA200": EMA(df["close"], 200),
+    }
+    return ribbons
+
+
+# =====================================================
+# RENDER PREMIUM INDICATORS
+# =====================================================
+
 def render_indicators(df):
-    st.subheader("📊 Indicators Premium Level-4 (Pro Dashboard)")
+    st.subheader("📊 Premium Indicators (Unified Chart)")
 
-    df = normalize_df(df).copy()
+    df = df.copy()
 
-    # ===========================
-    # CALCULATE INDICATORS
-    # ===========================
-    df["EMA20"] = EMA(df["Close"], 20)
-    df["RSI"] = RSI(df["Close"])
-    df["MACD"], df["MACD_SIGNAL"] = MACD(df["Close"])
-    df["BB_MID"], df["BB_UP"], df["BB_LOW"] = Bollinger(df["Close"])
-    df["ATR"] = ATR(df)
-    df["VOL_EMA"] = EMA(df["Volume"], 20)
-    df["ST"], df["ST_DIR"] = Supertrend(df)
+    # =================
+    # CALCULATE ALL
+    # =================
+    df["EMA20"] = EMA(df["close"], 20)
+    df["RSI"] = RSI(df["close"])
+    df["MACD"], df["MACD_SIGNAL"] = MACD(df["close"])
 
-    # ===========================
-    # FIGURE
-    # ===========================
+    df = calc_supertrend(df)
+    ribbons = trend_ribbon(df)
+
+    # =====================================================
+    # PLOTLY FIGURE
+    # =====================================================
+
     fig = go.Figure()
 
-    # -------------------------------------------------
-    # PANEL 1 — PRICE + EMA + BB + SUPERTREND
-    # -------------------------------------------------
-    # Price
+    # -------------------------
+    # PRICE (main)
+    # -------------------------
     fig.add_trace(go.Scatter(
-        x=df.index, y=df["Close"],
-        mode="lines", name="Close",
-        line=dict(color="#60a5fa", width=1.8)
+        x=df.index, y=df["close"],
+        mode="lines",
+        name="Close",
+        line=dict(color="#38bdf8", width=2)
     ))
 
+    # -------------------------
     # EMA20
+    # -------------------------
     fig.add_trace(go.Scatter(
         x=df.index, y=df["EMA20"],
-        mode="lines", name="EMA20",
-        line=dict(color="#f59e0b", width=1.5)
-    ))
-
-    # Bollinger Bands
-    fig.add_trace(go.Scatter(
-        x=df.index, y=df["BB_UP"],
-        line=dict(color="rgba(255,255,255,0.25)", width=1),
-        name="BB Upper",
-    ))
-    fig.add_trace(go.Scatter(
-        x=df.index, y=df["BB_LOW"],
-        line=dict(color="rgba(255,255,255,0.25)", width=1),
-        name="BB Lower",
-        fill="tonexty",
-        fillcolor="rgba(255,255,255,0.05)"
-    ))
-
-    # Supertrend
-    fig.add_trace(go.Scatter(
-        x=df.index, y=df["ST"],
         mode="lines",
-        name="Supertrend",
-        line=dict(
-            color=df["ST_DIR"].apply(lambda x: "#22c55e" if x==1 else "#ef4444"),
-            width=2
-        )
+        name="EMA20",
+        line=dict(color="#a855f7", width=1.5)
     ))
 
-    # -------------------------------------------------
-    # PANEL 2 — VOLUME + VOL EMA
-    # -------------------------------------------------
-    fig.add_trace(go.Bar(
-        x=df.index, y=df["Volume"],
-        name="Volume",
-        marker_color="rgba(96,165,250,0.35)",
-        yaxis="y2"
-    ))
+    # -------------------------
+    # SUPER TREND FIXED (2 trace)
+    # -------------------------
 
+    # Bullish line (green)
     fig.add_trace(go.Scatter(
-        x=df.index, y=df["VOL_EMA"],
+        x=df.index,
+        y=df["ST"].where(df["ST_DIR"] == 1),
         mode="lines",
-        name="Volume EMA",
-        line=dict(color="#f97316", width=1.8),
-        yaxis="y2"
+        name="Supertrend Up",
+        line=dict(color="#22c55e", width=2)
     ))
 
-    # -------------------------------------------------
-    # PANEL 3 — RSI
-    # -------------------------------------------------
+    # Bearish line (red)
     fig.add_trace(go.Scatter(
-        x=df.index, y=df["RSI"],
+        x=df.index,
+        y=df["ST"].where(df["ST_DIR"] == -1),
         mode="lines",
-        name="RSI",
-        line=dict(color="#34d399", width=1.4),
-        yaxis="y3"
+        name="Supertrend Down",
+        line=dict(color="#ef4444", width=2)
     ))
 
-    fig.add_hline(y=70, line_color="rgba(255,0,0,0.4)", yref="y3")
-    fig.add_hline(y=30, line_color="rgba(0,255,0,0.4)", yref="y3")
+    # -------------------------
+    # TREND RIBBON HEATMAP
+    # -------------------------
+    for name, series in ribbons.items():
+        fig.add_trace(go.Scatter(
+            x=df.index,
+            y=series,
+            mode="lines",
+            name=name,
+            line=dict(width=1),
+            opacity=0.35
+        ))
 
-    # -------------------------------------------------
-    # PANEL 4 — MACD
-    # -------------------------------------------------
-    fig.add_trace(go.Scatter(
-        x=df.index, y=df["MACD"],
-        mode="lines",
-        name="MACD",
-        line=dict(color="#a78bfa", width=1.5),
-        yaxis="y4"
-    ))
-    fig.add_trace(go.Scatter(
-        x=df.index, y=df["MACD_SIGNAL"],
-        mode="lines",
-        name="Signal",
-        line=dict(color="#fbcfe8", width=1.5),
-        yaxis="y4"
-    ))
+    # =====================================================
+    # LAYOUT STYLING
+    # =====================================================
 
-    # ===========================
-    # LAYOUT
-    # ===========================
     fig.update_layout(
-        height=1100,
-        paper_bgcolor="#0f172a",
-        plot_bgcolor="#0f172a",
-        font=dict(color="#e2e8f0"),
-
-        xaxis=dict(domain=[0, 1], showgrid=False),
-
-        # PANEL DOMAINS
-        yaxis=dict(  # PRICE
-            domain=[0.58, 1.00],
-            title="Price",
-            gridcolor="rgba(255,255,255,0.05)"
-        ),
-        yaxis2=dict(  # VOLUME
-            domain=[0.43, 0.56],
-            title="Volume",
-            gridcolor="rgba(255,255,255,0.05)"
-        ),
-        yaxis3=dict(  # RSI
-            domain=[0.22, 0.40],
-            title="RSI",
-            gridcolor="rgba(255,255,255,0.05)",
-            range=[0, 100]
-        ),
-        yaxis4=dict(  # MACD
-            domain=[0.05, 0.20],
-            title="MACD",
-            gridcolor="rgba(255,255,255,0.05)"
-        ),
-
+        template="plotly_dark",
+        height=650,
+        margin=dict(l=40, r=40, t=40, b=40),
+        showlegend=True,
+        plot_bgcolor="rgba(17, 24, 39, 0.9)",
+        paper_bgcolor="rgba(17, 24, 39, 0.0)",
         legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ),
-
-        margin=dict(l=40, r=40, t=80, b=40)
+            bgcolor="rgba(0,0,0,0)",
+            font=dict(color="white")
+        )
     )
 
+    # Y-axis formatting
+    fig.update_yaxes(gridcolor="rgba(255,255,255,0.1)")
+    fig.update_xaxes(gridcolor="rgba(255,255,255,0.1)")
+
+    # =====================================================
+    # RENDER
+    # =====================================================
     st.plotly_chart(fig, use_container_width=True)
