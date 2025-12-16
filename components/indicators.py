@@ -15,7 +15,7 @@ def EMA(series, period):
 def RSI(series, period=14):
     delta = series.diff()
     gain = delta.where(delta > 0, 0).ewm(span=period).mean()
-    loss = -delta.where(delta < 0, 0).ewm(span=period).mean()
+    loss = (-delta.where(delta < 0, 0)).ewm(span=period).mean()
     RS = gain / loss
     return 100 - (100 / (1 + RS))
 
@@ -32,55 +32,98 @@ def supertrend(df, period=10, multiplier=3):
     upperband = hl2 + multiplier * atr
     lowerband = hl2 - multiplier * atr
 
-    final_upperband = upperband.copy()
-    final_lowerband = lowerband.copy()
+    final_upper = upperband.copy()
+    final_lower = lowerband.copy()
 
     for i in range(1, len(df)):
-        if df["close"].iloc[i] > final_upperband.iloc[i-1]:
-            final_upperband.iloc[i] = upperband.iloc[i]
+        if df["close"].iloc[i] > final_upper.iloc[i-1]:
+            final_upper.iloc[i] = upperband.iloc[i]
         else:
-            final_upperband.iloc[i] = min(upperband.iloc[i], final_upperband.iloc[i-1])
+            final_upper.iloc[i] = min(upperband.iloc[i], final_upper.iloc[i-1])
 
-        if df["close"].iloc[i] < final_lowerband.iloc[i-1]:
-            final_lowerband.iloc[i] = lowerband.iloc[i]
+        if df["close"].iloc[i] < final_lower.iloc[i-1]:
+            final_lower.iloc[i] = lowerband.iloc[i]
         else:
-            final_lowerband.iloc[i] = max(lowerband.iloc[i], final_lowerband.iloc[i-1])
+            final_lower.iloc[i] = max(lowerband.iloc[i], final_lower.iloc[i-1])
 
-    trend = np.where(df["close"] > final_lowerband, 1, -1)
-    return final_upperband, final_lowerband, trend
+    trend = np.where(df["close"] > final_lower, 1, -1)
+
+    return final_upper, final_lower, trend
 
 
 # ============================================================
-# Rendering (Premium MT4 Style)
+# LEVEL 5: Volume Heatmap + VWAP + Pressure Oscillator
+# ============================================================
+
+def calc_vwap(df):
+    typical = (df["high"] + df["low"] + df["close"]) / 3
+    vwap = (typical * df["volume"]).cumsum() / df["volume"].cumsum()
+    return vwap
+
+
+def calc_volume_heat(df):
+    """
+    Heat volume:
+    - strong buy → bright green
+    - strong sell → bright red
+    - neutral → yellow/orange
+    """
+    df = df.copy()
+
+    df["vol_norm"] = df["volume"] / df["volume"].rolling(20).mean()
+    df["vol_norm"] = df["vol_norm"].clip(0.2, 3)
+
+    return df["vol_norm"]
+
+
+def calc_pressure(df):
+    """
+    Buy/Sell Pressure Oscillator (0–100)
+    """
+    buy = df["close"] - df["low"]
+    sell = df["high"] - df["close"]
+
+    pressure = buy / (buy + sell + 1e-9)
+    pressure = pressure * 100
+    pressure = pressure.rolling(5).mean()
+    return pressure
+
+
+# ============================================================
+# RENDER (Ultra Premium)
 # ============================================================
 
 def render_indicators(df):
 
-    st.subheader("📊 Premium Indicators (Unified MT4 Style)")
+    st.subheader("📊 Premium Indicators Level 5 (Pro Pack)")
 
     # -------------------------------------
-    # Compute Indicators
+    # Compute all indicators
     # -------------------------------------
     df["EMA20"] = EMA(df["close"], 20)
     df["RSI"] = RSI(df["close"], 14)
     df["MACD"], df["MACD_SIGNAL"] = MACD(df["close"])
     df["ST_UP"], df["ST_DOWN"], df["ST_TREND"] = supertrend(df)
+    df["VWAP"] = calc_vwap(df)
+    df["VOL_HEAT"] = calc_volume_heat(df)
+    df["PRESSURE"] = calc_pressure(df)
 
     # -------------------------------------
-    # Create Subplots (3-panel)
+    # Create 4 Panels
     # -------------------------------------
     fig = make_subplots(
-        rows=3, cols=1,
+        rows=4, cols=1,
         shared_xaxes=True,
         vertical_spacing=0.06,
-        row_heights=[0.55, 0.25, 0.20],
+        row_heights=[0.50, 0.20, 0.20, 0.25],
         specs=[[{"type": "xy"}],
+               [{"type": "xy"}],
                [{"type": "xy"}],
                [{"type": "xy"}]]
     )
 
     # ============================================================
-    # Panel 1 — Price + EMA20 + SuperTrend
+    # PANEL 1 — Price, EMA20, SuperTrend
     # ============================================================
 
     fig.add_trace(go.Scatter(
@@ -101,19 +144,18 @@ def render_indicators(df):
         x=df.index, y=df["ST_UP"],
         mode="lines",
         line=dict(color="#66BB6A", width=1),
-        name="Supertrend Up"
+        name="SuperTrend Up"
     ), row=1, col=1)
 
     fig.add_trace(go.Scatter(
         x=df.index, y=df["ST_DOWN"],
         mode="lines",
         line=dict(color="#EF5350", width=1),
-        name="Supertrend Down"
+        name="SuperTrend Down"
     ), row=1, col=1)
 
-
     # ============================================================
-    # Panel 2 — RSI
+    # PANEL 2 — RSI
     # ============================================================
 
     fig.add_trace(go.Scatter(
@@ -123,17 +165,11 @@ def render_indicators(df):
         name="RSI"
     ), row=2, col=1)
 
-    # Overbought 70
-    fig.add_hline(y=70, line=dict(color="#EF5350", width=1, dash="dash"),
-                  row=2, col=1)
-
-    # Oversold 30
-    fig.add_hline(y=30, line=dict(color="#66BB6A", width=1, dash="dash"),
-                  row=2, col=1)
-
+    fig.add_hline(y=70, line=dict(color="#EF5350", dash="dash"), row=2, col=1)
+    fig.add_hline(y=30, line=dict(color="#66BB6A", dash="dash"), row=2, col=1)
 
     # ============================================================
-    # Panel 3 — MACD
+    # PANEL 3 — MACD
     # ============================================================
 
     fig.add_trace(go.Scatter(
@@ -150,17 +186,50 @@ def render_indicators(df):
         name="Signal"
     ), row=3, col=1)
 
+    # ============================================================
+    # PANEL 4 — Volume Heatmap + VWAP + Pressure
+    # ============================================================
+
+    # Volume heat (colored)
+    fig.add_trace(go.Bar(
+        x=df.index,
+        y=df["volume"],
+        marker=dict(
+            color=df["VOL_HEAT"],
+            colorscale=[[0, "#ff6b6b"], [0.5, "#FFD93D"], [1, "#4CAF50"]],
+        ),
+        name="Volume Heatmap",
+        opacity=0.75
+    ), row=4, col=1)
+
+    # VWAP line
+    fig.add_trace(go.Scatter(
+        x=df.index, y=df["VWAP"],
+        mode="lines",
+        line=dict(color="#42A5F5", width=2),
+        name="VWAP"
+    ), row=4, col=1)
+
+    # Pressure Oscillator
+    fig.add_trace(go.Scatter(
+        x=df.index, y=df["PRESSURE"],
+        mode="lines",
+        line=dict(color="#F06292", width=2),
+        name="Buy/Sell Pressure"
+    ), row=4, col=1)
+
+    fig.add_hline(y=50, line=dict(color="#888", dash="dot"), row=4, col=1)
 
     # ============================================================
-    # Final Layout
+    # FINAL LAYOUT
     # ============================================================
 
     fig.update_layout(
         template="plotly_dark",
-        height=1000,
+        height=1300,
         showlegend=True,
-        margin=dict(l=40, r=40, t=50, b=40),
-        legend=dict(x=0, y=1.12, orientation="h")
+        margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(x=0, y=1.15, orientation="h")
     )
 
     st.plotly_chart(fig, use_container_width=True)
