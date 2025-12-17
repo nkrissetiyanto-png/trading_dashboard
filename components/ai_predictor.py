@@ -195,9 +195,26 @@ class AIPredictor:
     def _extract_features(self, df: pd.DataFrame):
         df = self._normalize_ohlcv(df)
 
+        # ========== HANDLE FLEXIBLE VOLUME COLUMN ==========
+        vol_col = None
+        for c in df.columns:
+            if c.lower() in ["volume", "vol", "qty"]:
+                vol_col = c
+                break
+        
+        # fallback jika benar-benar tidak ada volume
+        if vol_col is None:
+            df["volume_safe"] = 1
+            vol_col = "volume_safe"
+        
         close = df["Close"].values
-        volume = df["Volume"].values
-        open_ = df["Open"].values
+        open_  = df["Open"].values
+        volume = df[vol_col].values
+        # ====================================================
+
+        #close = df["Close"].values
+        #volume = df["Volume"].values
+        #open_ = df["Open"].values
         last = len(df) - 1
 
         # Return 1 candle
