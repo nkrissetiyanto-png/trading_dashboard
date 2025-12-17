@@ -42,7 +42,7 @@ def Bollinger(series, period=20, dev=2):
 # ======================================================
 
 def render_indicators(df: pd.DataFrame):
-    st.subheader("📊 Technical Indicators (Premium • Clean Mode)")
+    st.subheader("📊 Technical Indicators - Premium")
 
     df = df.copy()
 
