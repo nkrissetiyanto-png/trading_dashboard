@@ -193,59 +193,59 @@ class AIPredictor:
     # Feature extraction
     # -----------------------------
     def _extract_features(self, df: pd.DataFrame) -> np.ndarray:
-    df = self._normalize_ohlcv(df)
-
-    # ================== ENSURE CLEAN DF ==================
-    # Drop baris yang incomplete (indikator bisa bikin NaN di awal)
-    df = df.dropna(subset=["Open", "Close", "Volume"], how="any")
-
-    # Tidak cukup data?
-    if len(df) < 10:
-        return np.array([0, 0, 0, 0])
-    # =====================================================
-
-    # Auto-detect volume column
-    vol_col = None
-    for c in df.columns:
-        if c.lower() in ["volume", "vol", "qty"]:
-            vol_col = c
-            break
-    if vol_col is None:
-        df["volume_safe"] = 1
-        vol_col = "volume_safe"
-
-    close = df["Close"]
-    volume = df[vol_col]
-    open_ = df["Open"]
-
-    last = -1
-
-    # Return last candle
-    try:
-        ret_1 = ((close.iloc[last] - close.iloc[last - 1]) / close.iloc[last - 1] * 100)
-    except:
-        ret_1 = 0.0
-
-    # Momentum 5 candle
-    try:
-        mom_5 = ((close.iloc[last] - close.iloc[last - 5]) / close.iloc[last - 5] * 100)
-    except:
-        mom_5 = ret_1
-
-    # Volume momentum
-    try:
-        base_vol = volume.iloc[last-20:last].mean()
-        vol_mom = ((volume.iloc[last] - base_vol) / base_vol * 100) if base_vol else 0.0
-    except:
-        vol_mom = 0.0
-
-    # Candle body strength
-    try:
-        body = ((close.iloc[last] - open_.iloc[last]) / open_.iloc[last] * 100)
-    except:
-        body = 0.0
-
-    return np.array([ret_1, mom_5, vol_mom, body])
+        df = self._normalize_ohlcv(df)
+    
+        # ================== ENSURE CLEAN DF ==================
+        # Drop baris yang incomplete (indikator bisa bikin NaN di awal)
+        df = df.dropna(subset=["Open", "Close", "Volume"], how="any")
+    
+        # Tidak cukup data?
+        if len(df) < 10:
+            return np.array([0, 0, 0, 0])
+        # =====================================================
+    
+        # Auto-detect volume column
+        vol_col = None
+        for c in df.columns:
+            if c.lower() in ["volume", "vol", "qty"]:
+                vol_col = c
+                break
+        if vol_col is None:
+            df["volume_safe"] = 1
+            vol_col = "volume_safe"
+    
+        close = df["Close"]
+        volume = df[vol_col]
+        open_ = df["Open"]
+    
+        last = -1
+    
+        # Return last candle
+        try:
+            ret_1 = ((close.iloc[last] - close.iloc[last - 1]) / close.iloc[last - 1] * 100)
+        except:
+            ret_1 = 0.0
+    
+        # Momentum 5 candle
+        try:
+            mom_5 = ((close.iloc[last] - close.iloc[last - 5]) / close.iloc[last - 5] * 100)
+        except:
+            mom_5 = ret_1
+    
+        # Volume momentum
+        try:
+            base_vol = volume.iloc[last-20:last].mean()
+            vol_mom = ((volume.iloc[last] - base_vol) / base_vol * 100) if base_vol else 0.0
+        except:
+            vol_mom = 0.0
+    
+        # Candle body strength
+        try:
+            body = ((close.iloc[last] - open_.iloc[last]) / open_.iloc[last] * 100)
+        except:
+            body = 0.0
+    
+        return np.array([ret_1, mom_5, vol_mom, body])
 
 
     # -----------------------------
