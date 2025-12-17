@@ -61,10 +61,29 @@ class AIPredictor:
         if len(df) < 20:
             return {"type": None, "score": 0.0, "reasons": []}
 
+        #start revision
+        #close = df["Close"].values
+        #open_ = df["Open"].values
+        #volume = df["Volume"].values
+        
+        # Auto-detect volume column
+        vol_col = None
+        for c in df.columns:
+            if c.lower() in ["volume", "vol", "qty"]:
+                vol_col = c
+                break
+        
+        if vol_col is None:
+            print("WARNING: No volume column detected → using constant volume placeholder.")
+            df["volume_safe"] = 1
+            vol_col = "volume_safe"
+        
         close = df["Close"].values
-        open_ = df["Open"].values
-        volume = df["Volume"].values
+        open_  = df["Open"].values
+        volume = df[vol_col].values
+        #end revision
 
+        
         last = len(df) - 1
         reasons = []
         score = 0
