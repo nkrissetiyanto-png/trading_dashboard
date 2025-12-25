@@ -30,19 +30,19 @@ def login_ui():
         if not user:
             st.error("User tidak ditemukan")
             return False
-
-        if password != user["password"]:
-            st.error("Password salah")
-            return False
-
-        # SIMPAN SESSION
-        st.session_state.logged_in = True
-        st.session_state.username = username
-        st.session_state.role = user["role"]
-
-        st.success(f"Login berhasil sebagai {user['role']}")
-        st.rerun()
-
+        else:
+            if password != user["password"]:
+                st.error("Password salah")
+                return False
+            else:
+                # SIMPAN SESSION
+                st.session_state.logged_in = True
+                st.session_state.username = username
+                st.session_state.role = user["role"]
+        
+                st.success(f"Login berhasil sebagai {user['role']}")
+                st.rerun()
+            
     return False
 
 def logout():
