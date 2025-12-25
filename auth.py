@@ -18,9 +18,6 @@ USERS = {
 def hash_password(pw):
     return hashlib.sha256(pw.encode()).hexdigest()
 
-def is_premium():
-    return st.session_state.get("role") == "PREMIUM"
-
 def login_ui():
     st.subheader("🔐 Login")
 
