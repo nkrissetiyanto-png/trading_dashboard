@@ -170,7 +170,7 @@ while True:
     # --- render semua konten di container stabil ---
     with page.container():
 
-        st.title(f"🔥 Cuanmology Premium Dashboard — {symbol}")
+        st.title(f"🔥 Cuanmology Trading Dashboard — {symbol}")
 
         col1, col2 = st.columns([3, 1])
 
