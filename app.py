@@ -18,7 +18,7 @@ from components.indo_heatmap import render_heatmap
 from components.indo_battle_meter import render_battle_meter
 from components.reversal_premium_ui import render_reversal_premium
 from components.reversal_premium_level2 import render_reversal_premium_level2
-from auth import login_ui, is_premium
+from auth import login_ui, is_premium, logout
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -136,6 +136,9 @@ reversal_sensitivity = st.sidebar.select_slider(
 
 auto_refresh = st.sidebar.checkbox("Auto Refresh", True)
 refresh_rate = st.sidebar.slider("Refresh (seconds)", 3, 30, 5)
+
+st.sidebar.markdown("---")
+st.sidebar.button("🚪 Logout", on_click=logout)
 
 # ======================================================
 # MAIN PAGE CONTAINER (ANTI FLICKER)
