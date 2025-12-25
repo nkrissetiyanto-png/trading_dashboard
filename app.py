@@ -19,7 +19,15 @@ from components.indo_battle_meter import render_battle_meter
 #from components.reversal_probability import render_reversal_probability
 from components.reversal_premium_ui import render_reversal_premium
 from components.reversal_premium_level2 import render_reversal_premium_level2
+from auth import login_ui, is_premium
 
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if not st.session_state.logged_in:
+    login_ui()
+    st.stop()
+    
 # ======================================================
 # PAGE CONFIG
 # ======================================================
@@ -163,16 +171,19 @@ while True:
             render_chart(df)
             render_indicators(df)
 
-            if mode.startswith("Saham Indonesia"):
-                render_sentiment(symbol)
-                render_heatmap(df)
-                render_battle_meter()
-                #render_reversal_probability(df)
-                render_reversal_premium(df)
-                render_reversal_premium_level2(df)
+            if is_premium():
+                if mode.startswith("Saham Indonesia"):
+                    render_sentiment(symbol)
+                    render_heatmap(df)
+                    render_battle_meter()
+                    render_reversal_premium(df)
+                    render_reversal_premium_level2(df)
+                else:
+                    render_crypto_sentiment(symbol)
+                    render_ai_signal(df)
             else:
-                render_crypto_sentiment(symbol)
-                render_ai_signal(df)
+                st.info("🔒 AI Confidence hanya untuk Premium")
+                
                 
                 trend_result = ai.predict(df)
                 decision, reason, reversal_sig, smart_money = final_decision_engine(df, trend_result)
