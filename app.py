@@ -138,7 +138,9 @@ auto_refresh = st.sidebar.checkbox("Auto Refresh", True)
 refresh_rate = st.sidebar.slider("Refresh (seconds)", 3, 30, 5)
 
 st.sidebar.markdown("---")
-st.sidebar.button("🚪 Logout", on_click=logout)
+if st.sidebar.button("🚪 Logout"):
+    logout()
+    st.rerun()  
 
 # ======================================================
 # MAIN PAGE CONTAINER (ANTI FLICKER)
