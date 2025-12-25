@@ -45,5 +45,10 @@ def login_ui():
 
     return False
 
+def logout():
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.rerun()
+
 def is_premium():
     return st.session_state.get("role") == "PREMIUM"
