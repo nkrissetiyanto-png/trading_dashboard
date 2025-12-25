@@ -44,3 +44,6 @@ def login_ui():
         st.rerun()
 
     return False
+
+def is_premium():
+    return st.session_state.get("role") == "PREMIUM"
