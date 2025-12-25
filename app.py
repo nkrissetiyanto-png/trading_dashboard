@@ -16,7 +16,6 @@ from components.reversal_detector import render_reversal_detector
 from components.ai_predictor import AIPredictor
 from components.indo_heatmap import render_heatmap
 from components.indo_battle_meter import render_battle_meter
-#from components.reversal_probability import render_reversal_probability
 from components.reversal_premium_ui import render_reversal_premium
 from components.reversal_premium_level2 import render_reversal_premium_level2
 from auth import login_ui, is_premium
@@ -127,6 +126,13 @@ reversal_sensitivity = st.sidebar.select_slider(
     "Reversal Sensitivity",
     options=["Low", "Medium", "High"],
     value="Medium"
+)
+
+st.sidebar.markdown(
+    f"""
+    👤 **User:** {st.session_state.username}  
+    ⭐ **Plan:** {st.session_state.role}
+    """
 )
 
 auto_refresh = st.sidebar.checkbox("Auto Refresh", True)
