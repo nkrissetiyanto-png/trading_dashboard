@@ -98,6 +98,12 @@ def premium_loading():
     </div>
     """, unsafe_allow_html=True)
 
+st.sidebar.markdown(
+    f"""
+    👤 **User:** {st.session_state.username}  
+    ⭐ **Plan:** {st.session_state.role}
+    """
+)
 
 # ======================================================
 # SIDEBAR SETTINGS
@@ -126,13 +132,6 @@ reversal_sensitivity = st.sidebar.select_slider(
     "Reversal Sensitivity",
     options=["Low", "Medium", "High"],
     value="Medium"
-)
-
-st.sidebar.markdown(
-    f"""
-    👤 **User:** {st.session_state.username}  
-    ⭐ **Plan:** {st.session_state.role}
-    """
 )
 
 auto_refresh = st.sidebar.checkbox("Auto Refresh", True)
@@ -187,26 +186,25 @@ while True:
                 else:
                     render_crypto_sentiment(symbol)
                     render_ai_signal(df)
+            
+                    trend_result = ai.predict(df)
+                    decision, reason, reversal_sig, smart_money = final_decision_engine(df, trend_result)
+                    
+                    st.markdown("## 🧠 AI Final Decision Engine")
+                    
+                    color = "🟢" if decision in ["BUY", "REVERSAL BUY"] else ("🔴" if decision in ["SELL", "TAKE PROFIT"] else "⚪")
+                    
+                    st.markdown(f"### {color} Final Decision: **{decision}**")
+                    
+                    st.markdown("### Reasoning:")
+                    for r in reason:
+                        st.markdown(f"- {r}")
+    
+                    render_reversal_detector(df, reversal_sensitivity)
+                    render_ai_confidence_chart()
             else:
                 st.info("🔒 AI Confidence hanya untuk Premium")
                 
-                
-                trend_result = ai.predict(df)
-                decision, reason, reversal_sig, smart_money = final_decision_engine(df, trend_result)
-                
-                st.markdown("## 🧠 AI Final Decision Engine")
-                
-                color = "🟢" if decision in ["BUY", "REVERSAL BUY"] else ("🔴" if decision in ["SELL", "TAKE PROFIT"] else "⚪")
-                
-                st.markdown(f"### {color} Final Decision: **{decision}**")
-                
-                st.markdown("### Reasoning:")
-                for r in reason:
-                    st.markdown(f"- {r}")
-
-                render_reversal_detector(df, reversal_sensitivity)
-                render_ai_confidence_chart()
-
             render_signals(df)
 
         with col2:
