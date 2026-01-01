@@ -18,7 +18,7 @@ from components.indo_heatmap import render_heatmap
 from components.indo_battle_meter import render_battle_meter
 from components.reversal_premium_ui import render_reversal_premium
 from components.reversal_premium_level2 import render_reversal_premium_level2
-from auth import login_ui, is_premium, logout, init_auth
+from auth import login_ui, is_premium, logout, init_auth, check_timeout
 
 # ======================================================
 # PAGE CONFIG
@@ -30,6 +30,7 @@ st.set_page_config(
 )
 
 init_auth()
+check_timeout()
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
