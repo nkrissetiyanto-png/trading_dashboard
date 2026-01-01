@@ -105,6 +105,9 @@ st.sidebar.markdown(
     """
 )
 
+st.sidebar.success(f"👋 {st.session_state.username}")
+st.sidebar.caption(f"Role: {st.session_state.role}")
+
 # ======================================================
 # SIDEBAR SETTINGS
 # ======================================================
