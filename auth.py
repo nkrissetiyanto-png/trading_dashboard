@@ -1,29 +1,53 @@
 import streamlit as st
+import hashlib
+import time
+
+SESSION_TIMEOUT = 30 * 60  # 30 menit
 
 # =========================
-# USER DATABASE (sementara)
+# USER DATABASE (contoh)
 # =========================
 USERS = {
     "demo": {
-        "password": "demo123",
-        "role": "FREE"
+        "password": hashlib.sha256("demo123".encode()).hexdigest(),
+        "plan": "FREE"
     },
     "nanang": {
-        "password": "premium123",
-        "role": "PREMIUM"
+        "password": hashlib.sha256("premium123".encode()).hexdigest(),
+        "plan": "PREMIUM"
     }
 }
 
 # =========================
-# INIT SESSION STATE
+# INIT SESSION
 # =========================
 def init_auth():
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
-    if "username" not in st.session_state:
-        st.session_state.username = None
-    if "role" not in st.session_state:
-        st.session_state.role = None
+    defaults = {
+        "logged_in": False,
+        "username": None,
+        "plan": None,
+        "last_active": None
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
+# =========================
+# HASH
+# =========================
+def hash_pw(pw: str):
+    return hashlib.sha256(pw.encode()).hexdigest()
+
+# =========================
+# SESSION CHECK
+# =========================
+def check_timeout():
+    if st.session_state.logged_in:
+        now = time.time()
+        if st.session_state.last_active and now - st.session_state.last_active > SESSION_TIMEOUT:
+            logout()
+        else:
+            st.session_state.last_active = now
 
 # =========================
 # LOGIN UI
@@ -31,24 +55,25 @@ def init_auth():
 def login_ui():
     st.markdown("## 🔐 Login")
 
-    username = st.text_input("Username", key="login_user")
-    password = st.text_input("Password", type="password", key="login_pass")
+    user = st.text_input("Username")
+    pw = st.text_input("Password", type="password")
 
     if st.button("Login", use_container_width=True):
-        user = USERS.get(username)
+        data = USERS.get(user)
 
-        if not user:
-            st.error("❌ User tidak ditemukan")
-        elif password != user["password"]:
-            st.error("❌ Password salah")
+        if not data:
+            st.error("User tidak ditemukan")
+        elif hash_pw(pw) != data["password"]:
+            st.error("Password salah")
         else:
             st.session_state.logged_in = True
-            st.session_state.username = username
-            st.session_state.role = user["role"]
+            st.session_state.username = user
+            st.session_state.plan = data["plan"]
+            st.session_state.last_active = time.time()
             st.rerun()
 
 # =========================
-# LOGOUT (FULL RESET)
+# LOGOUT
 # =========================
 def logout():
     for k in list(st.session_state.keys()):
@@ -56,7 +81,7 @@ def logout():
     st.rerun()
 
 # =========================
-# ROLE CHECK
+# PLAN CHECK
 # =========================
 def is_premium():
-    return st.session_state.get("role") == "PREMIUM"
+    return st.session_state.get("plan") == "PREMIUM"
