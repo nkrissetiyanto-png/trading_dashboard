@@ -106,7 +106,7 @@ def premium_loading():
 st.sidebar.markdown(
     f"""
     👤 **User:** {st.session_state.username}  
-    ⭐ **Plan:** {st.session_state.role}
+    ⭐ **Plan:** {st.session_state.plan}
     """
 )
 
