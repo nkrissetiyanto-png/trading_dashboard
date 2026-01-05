@@ -1,6 +1,7 @@
 import streamlit as st
 import hashlib
 import time
+from db import get_db
 
 SESSION_TIMEOUT = 30 * 60  # 30 menit
 
@@ -112,8 +113,66 @@ def login_ui():
 
             st.rerun()
 
+def register_user(username, password):
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute(
+            "INSERT INTO users (username, password_hash, plan, datejoin, lastpayment) VALUES (?, ?, ?, ?, ?)",
+            (username, hash_pw(password), "FREE", "-","-")
+        )
+        conn.commit()
+        return True
+    except:
+        return False
+    finally:
+        conn.close()
 
+def authenticate(username, password):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute(
+        "SELECT password_hash, plan FROM users WHERE username = ?",
+        (username,)
+    )
+    row = c.fetchone()
+    conn.close()
 
+    if not row:
+        return None
+
+    if hash_pw(password) == row[0]:
+        return row[1]  # plan
+    return None
+
+def login_ui_db():
+    st.subheader("🔐 Login")
+
+    u = st.text_input("Username", key="login_user")
+    p = st.text_input("Password", type="password", key="login_pass")
+
+    if st.button("Login"):
+        plan = authenticate(u, p)
+        if not plan:
+            st.error("Login gagal")
+        else:
+            st.session_state.logged_in = True
+            st.session_state.username = u
+            st.session_state.plan = plan
+            st.session_state.show_login = False
+            st.rerun()
+
+def register_ui():
+    st.subheader("🆕 Register")
+
+    u = st.text_input("Username", key="reg_user")
+    p = st.text_input("Password", type="password", key="reg_pass")
+
+    if st.button("Register"):
+        if register_user(u, p):
+            st.success("Akun dibuat. Silakan login.")
+        else:
+            st.error("Username sudah dipakai")
 
 # =========================
 # LOGOUT
