@@ -65,34 +65,78 @@ def check_timeout():
 # =========================
 # LOGIN UI
 # =========================
+#def login_ui():
+#    st.markdown("## 🔐 Login")
+
+#    user = st.text_input("Username")
+#    pw = st.text_input("Password", type="password")
+
+#    if st.button("Login", use_container_width=True):
+#        data = USERS.get(user)
+
+#        if not data:
+#            st.error("User tidak ditemukan")
+#        elif hash_pw(pw) != data["password"]:
+#            st.error("Password salah")
+#        else:
+#            st.session_state.logged_in = True
+#            st.session_state.username = user
+#            st.session_state.plan = data["plan"]
+#            st.session_state.show_login = False
+#            st.session_state.last_active = time.time()
+#            st.rerun()
+
 def login_ui():
     st.markdown("## 🔐 Login")
 
-    user = st.text_input("Username")
-    pw = st.text_input("Password", type="password")
+    username = st.text_input("Username", key="login_user")
+    password = st.text_input("Password", type="password", key="login_pass")
 
     if st.button("Login", use_container_width=True):
-        data = USERS.get(user)
+        data = USERS.get(username)
 
         if not data:
             st.error("User tidak ditemukan")
-        elif hash_pw(pw) != data["password"]:
+        elif hash_pw(password) != data["password"]:
             st.error("Password salah")
         else:
             st.session_state.logged_in = True
-            st.session_state.username = user
+            st.session_state.username = username
             st.session_state.plan = data["plan"]
-            st.session_state.show_login = False
             st.session_state.last_active = time.time()
+            st.session_state.show_login = False
+
+            # Clear input setelah sukses
+            st.session_state.pop("login_user", None)
+            st.session_state.pop("login_pass", None)
+
             st.rerun()
+
+
+
 
 # =========================
 # LOGOUT
 # =========================
+#def logout():
+#    for k in list(st.session_state.keys()):
+#        del st.session_state[k]
+#    st.rerun()
+
 def logout():
-    for k in list(st.session_state.keys()):
-        del st.session_state[k]
+    # Reset ke mode demo
+    st.session_state.logged_in = False
+    st.session_state.username = "Guest"
+    st.session_state.plan = "GUEST"
+    st.session_state.last_active = None
+    st.session_state.show_login = False
+
+    # Reset input login
+    st.session_state.pop("login_user", None)
+    st.session_state.pop("login_pass", None)
+
     st.rerun()
+
 
 # =========================
 # PLAN CHECK
