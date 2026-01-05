@@ -32,6 +32,9 @@ st.set_page_config(
 init_auth()
 check_timeout()
 
+if st.session_state.logged_in:
+    st.session_state.show_login = False
+    
 if not is_guest():
     if st.sidebar.button("🚪 Logout"):
         logout()
@@ -43,9 +46,12 @@ else:
 # =========================
 # OPTIONAL LOGIN MODAL
 # =========================
-if st.session_state.get("show_login"):
+#if st.session_state.get("show_login"):
+#    login_ui()
+#    st.stop()
+    
+if st.session_state.show_login and not st.session_state.logged_in:
     login_ui()
-    st.stop()
 
 #if "logged_in" not in st.session_state:
 #    st.session_state.logged_in = False
