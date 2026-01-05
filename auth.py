@@ -37,7 +37,8 @@ def init_auth():
         "logged_in": False,
         "username": "Guest",
         "plan": "GUEST",
-        "last_active": None
+        "last_active": None,
+        "show_login": False,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
