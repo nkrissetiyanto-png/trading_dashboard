@@ -19,6 +19,7 @@ from components.indo_battle_meter import render_battle_meter
 from components.reversal_premium_ui import render_reversal_premium
 from components.reversal_premium_level2 import render_reversal_premium_level2
 from auth import login_ui, is_premium, logout, init_auth, check_timeout, is_guest
+from db import init_db
 
 # ======================================================
 # PAGE CONFIG
@@ -29,6 +30,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+init_db()
 init_auth()
 check_timeout()
 
