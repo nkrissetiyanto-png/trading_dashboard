@@ -45,7 +45,7 @@ if st.session_state.logged_in:
 
 
 
-st.sidebar.markdown("🔐 **Mode Demo**")
+#st.sidebar.markdown("🔐 **Mode Demo**")
 
 if st.session_state.plan == "GUEST":
     if st.sidebar.button("👀 Mode Demo"):
@@ -56,8 +56,8 @@ if st.session_state.plan == "GUEST":
         st.session_state.show_login = True
         st.rerun()
 else:
-    st.sidebar.markdown(f"👤 {st.session_state.username}")
-    st.sidebar.caption(f"Plan: {st.session_state.plan}")
+    #st.sidebar.markdown(f"👤 {st.session_state.username}")
+    #st.sidebar.caption(f"Plan: {st.session_state.plan}")
 
     if st.sidebar.button("🚪 Logout"):
         logout()
