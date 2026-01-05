@@ -34,15 +34,34 @@ check_timeout()
 
 if st.session_state.logged_in:
     st.session_state.show_login = False
-    
-if not is_guest():
-    if st.sidebar.button("🚪 Logout"):
-        logout()
-else:
-    st.sidebar.info("🔓 Mode Demo")
+
+#if not is_guest():
+#    if st.sidebar.button("🚪 Logout"):
+#        logout()
+#else:
+#    st.sidebar.info("🔓 Mode Demo")
+#    if st.sidebar.button("🔐 Login / Join"):
+#        st.session_state.show_login = True
+
+
+
+st.sidebar.markdown("🔐 **Mode Demo**")
+
+if st.session_state.plan == "GUEST":
+    if st.sidebar.button("👀 Mode Demo"):
+        st.session_state.show_login = False
+        st.rerun()
+
     if st.sidebar.button("🔐 Login / Join"):
         st.session_state.show_login = True
+        st.rerun()
+else:
+    st.sidebar.markdown(f"👤 {st.session_state.username}")
+    st.sidebar.caption(f"Plan: {st.session_state.plan}")
 
+    if st.sidebar.button("🚪 Logout"):
+        logout()
+        
 # =========================
 # OPTIONAL LOGIN MODAL
 # =========================
