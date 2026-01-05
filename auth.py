@@ -81,6 +81,7 @@ def login_ui():
             st.session_state.logged_in = True
             st.session_state.username = user
             st.session_state.plan = data["plan"]
+            st.session_state.show_login = False
             st.session_state.last_active = time.time()
             st.rerun()
 
