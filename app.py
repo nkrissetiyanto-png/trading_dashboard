@@ -32,12 +32,27 @@ st.set_page_config(
 init_auth()
 check_timeout()
 
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
+if not is_guest():
+    if st.sidebar.button("🚪 Logout"):
+        logout()
+else:
+    st.sidebar.info("🔓 Mode Demo")
+    if st.sidebar.button("🔐 Login / Join"):
+        st.session_state.show_login = True
 
-if not st.session_state.logged_in:
+# =========================
+# OPTIONAL LOGIN MODAL
+# =========================
+if st.session_state.get("show_login"):
     login_ui()
     st.stop()
+
+#if "logged_in" not in st.session_state:
+#    st.session_state.logged_in = False
+
+#if not st.session_state.logged_in:
+#    login_ui()
+#    st.stop()
     
 
 # ================================
@@ -110,6 +125,35 @@ st.sidebar.markdown(
     """
 )
 
+def news_ticker():
+    st.markdown("""
+    <style>
+    .ticker {
+        background: linear-gradient(90deg,#1f2937,#111827);
+        color: #fbbf24;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        animation: pulse 2.5s infinite;
+    }
+    @keyframes pulse {
+        0% {opacity: 0.6;}
+        50% {opacity: 1;}
+        100% {opacity: 0.6;}
+    }
+    </style>
+
+    <div class="ticker">
+    🚀 Join membership untuk insight lebih lengkap, AI signal, dan multi-timeframe analysis
+    </div>
+    """, unsafe_allow_html=True)
+
+def teaser(msg="Upgrade untuk membuka fitur ini"):
+    st.info(f"🔒 {msg}")
+    
+if st.session_state.plan in ["GUEST", "FREE"]:
+    news_ticker()
+    
 #st.sidebar.success(f"👋 {st.session_state.username}")
 #st.sidebar.caption(f"Role: {st.session_state.role}")
 
@@ -216,7 +260,8 @@ while True:
                     render_reversal_detector(df, reversal_sensitivity)
                     render_ai_confidence_chart()
             else:
-                st.info("🔒 AI Confidence hanya untuk Premium")
+                teaser("AI Signal tersedia untuk member PREMIUM")
+#                st.info("🔒 AI Confidence hanya untuk Premium")
                 
             render_signals(df)
 
