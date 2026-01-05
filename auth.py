@@ -21,16 +21,28 @@ USERS = {
 # =========================
 # INIT SESSION
 # =========================
+#def init_auth():
+#    defaults = {
+#        "logged_in": False,
+#        "username": None,
+#        "plan": None,
+#        "last_active": None
+#    }
+#    for k, v in defaults.items():
+#        if k not in st.session_state:
+#            st.session_state[k] = v
+            
 def init_auth():
     defaults = {
         "logged_in": False,
-        "username": None,
-        "plan": None,
+        "username": "Guest",
+        "plan": "GUEST",
         "last_active": None
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
+
 
 # =========================
 # HASH
@@ -85,3 +97,6 @@ def logout():
 # =========================
 def is_premium():
     return st.session_state.get("plan") == "PREMIUM"
+
+def is_guest():
+    return not st.session_state.get("logged_in", False)
