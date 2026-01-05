@@ -50,7 +50,7 @@ else:
 #    login_ui()
 #    st.stop()
     
-if st.session_state.show_login and not st.session_state.logged_in:
+if st.session_state.get("show_login", False) and not st.session_state.logged_in:
     login_ui()
 
 #if "logged_in" not in st.session_state:
