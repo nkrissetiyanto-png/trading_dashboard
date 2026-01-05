@@ -13,7 +13,9 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
             password_hash TEXT,
-            plan TEXT
+            plan TEXT,
+            datejoin TEXT,
+            lastpayment TEXT
         )
     """)
     conn.commit()
